@@ -10,6 +10,8 @@ import 'common/global.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
+import 'routes/demo.dart';
+
 void main() async {
   Global.init().then((e) => runApp(const MyApp()));
 }
@@ -87,6 +89,7 @@ class MyApp extends StatelessWidget {
               "login": (context) => const LoginRoute(),
               "themes": (context) => const ThemeChangeRoute(),
               "language": (context) => const LanguageRoute(),
+              "demo": (context) => const DemoRoute()
             },
           );
         },

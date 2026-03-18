@@ -46,7 +46,7 @@ class _HomeRouteState extends State<HomeRoute> {
         ],
       ),
       body: _buildBody(), // 构建主页面
-      drawer: const MyDrawer(),
+      drawer: const MyDrawer(), //构建抽屉组件
       floatingActionButton: FloatingActionButton(
         child: Icon(Icons.add),
         onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SelectorPage())),
@@ -197,6 +197,11 @@ class MyDrawer extends StatelessWidget {
             leading: Icon(Icons.language),
             title: Text(l10n.language),
             onTap: () => Navigator.pushNamed(context, "language"),
+          ),
+          ListTile(
+            leading: Icon(Icons.info),
+            title: Text(l10n.demo),
+            onTap: () => Navigator.pushNamed(context, "demo"),
           ),
           if (value.isLogin)
             ListTile(

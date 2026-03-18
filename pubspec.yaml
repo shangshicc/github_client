@@ -44,6 +44,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   # fluttertoast: ^8.2.2 # disabled: Android v1 embedding API removed in Flutter 3.41+
+  fluttertoast: ^9.0.0 # disabled: Android v1 embedding API removed in Flutter 3.41+
 
 
 
@@ -69,10 +70,6 @@ dev_dependencies:
   flukit: ^3.0.1
   # https://pub.dev/packages/cached_network_image
   cached_network_image: ^3.2.3
-  # `intl_generator` 依赖 `intl <0.20.0`，与 Flutter 3.41+ 的 `intl 0.20.2` 不兼容。
-  # 如需继续维护 ARB/多语言生成流程，建议迁移到 Flutter 内置 `gen-l10n` 或选择支持新 `intl` 的生成工具。
-# For information on the generic Dart part of this file, see the
-# following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
 flutter:

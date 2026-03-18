@@ -109,5 +109,6 @@
     "description": "Shown at the bottom of the list when there is no more data to load.",
     "type": "text",
     "placeholders": {}
-  }
+  },
+  "demo": "demo"
 }

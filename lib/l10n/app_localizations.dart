@@ -205,6 +205,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No more data.'**
   String get noMoreData;
+
+  /// No description provided for @demo.
+  ///
+  /// In en, this message translates to:
+  /// **'demo'**
+  String get demo;
 }
 
 class _AppLocalizationsDelegate

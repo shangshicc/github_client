@@ -92,5 +92,6 @@
     "description": "列表底部没有更多内容时显示",
     "type": "text",
     "placeholders": {}
-  }
+  },
+   "demo": "样例"
 }

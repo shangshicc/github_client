@@ -61,4 +61,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get noMoreData => '没有更多数据了';
+
+  @override
+  String get demo => '样例';
 }
