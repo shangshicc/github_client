@@ -1,5 +1,6 @@
 {
   "@@last_modified": "2023-06-08T12:02:09.038321",
+  "@@locale": "zh",
   "title": "Github客户端",
   "@title": {
     "description": "Title for the Demo application",
@@ -83,6 +84,12 @@
   },
   "cancel": "取消",
   "@cancel": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "noMoreData": "没有更多数据了",
+  "@noMoreData": {
+    "description": "列表底部没有更多内容时显示",
     "type": "text",
     "placeholders": {}
   }

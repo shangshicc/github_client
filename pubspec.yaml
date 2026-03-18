@@ -40,8 +40,9 @@ dependencies:
   dio: ^5.2.0
   # Flutter SDK 的 `flutter_localizations` 会将 `intl` 固定到 0.20.2（Flutter 3.41.4）。
   # 如果需要生成/维护多语言，建议迁移掉 `intl_generator`（它要求 `intl <0.20.0`）。
-  intl: ^0.20.2
-  flutter_localization: ^0.1.11
+  intl: any
+  flutter_localizations:
+    sdk: flutter
   # fluttertoast: ^8.2.2 # disabled: Android v1 embedding API removed in Flutter 3.41+
 
 
@@ -75,7 +76,7 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
-
+  generate: true
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
   # the material Icons class.

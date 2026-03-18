@@ -1,5 +1,6 @@
 {
   "@@last_modified": "2023-06-08T12:10:49.355062",
+  "@@locale": "en",
   "title": "Flutter APP",
   "@title": {
     "description": "Title for the Demo application",
@@ -101,6 +102,12 @@
   "@cancel": {
     "type": "text",
     "placeholders_order": [],
+    "placeholders": {}
+  },
+  "noMoreData": "No more data.",
+  "@noMoreData": {
+    "description": "Shown at the bottom of the list when there is no more data to load.",
+    "type": "text",
     "placeholders": {}
   }
 }

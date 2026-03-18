@@ -1,0 +1,15 @@
+#多语言适配配置
+#代码生成的输入路径
+arb-dir: l10n-arb
+#默认使用的arb文件
+template-arb-file: intl_messages.arb
+#输出路径，输出类
+output-dir: lib/l10n
+output-localization-file: app_localizations.dart
+output-class: AppLocalizations
+#指定本地化类 getter 是否可为空。
+nullable-getter: false
+#指定本地化类 getter 是否可为空。
+#preferred-supported-locales:
+#  - en
+#  - zh

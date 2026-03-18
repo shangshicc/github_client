@@ -1,7 +1,6 @@
-
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/common/funs.dart';
 import 'package:github_client_app/common/git_api.dart';
 import 'package:github_client_app/models/index.dart';
@@ -11,11 +10,8 @@ import 'package:github_client_app/states/counter_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../common/global.dart';
-import '../l10n/localization_intl.dart';
 import '../states/profile_change_notifier.dart';
 import '../widgets/repo_item.dart';
-
-
 
 class HomeRoute extends StatefulWidget {
   const HomeRoute({Key? key}) : super(key: key);
@@ -25,15 +21,17 @@ class HomeRoute extends StatefulWidget {
 }
 
 class _HomeRouteState extends State<HomeRoute> {
-  static const loadingTag = "##loading##";//表尾标记
+  static const loadingTag = "##loading##"; //表尾标记
   final _items = <Repo>[Repo()..name = loadingTag];
   bool hasMore = true; //是否还有数据
   int page = 1; //当前请求的是第几页
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(GmLocalizations.of(context)?.home ?? ""),
+      appBar: AppBar(
+        title: Text(l10n.home),
         actions: [
           Consumer<CounterProvider>(
             builder: (context, value, child) {
@@ -57,12 +55,13 @@ class _HomeRouteState extends State<HomeRoute> {
   }
 
   Widget _buildBody() {
+    final l10n = AppLocalizations.of(context);
     UserModel userModel = Provider.of<UserModel>(context);
     print("_buildBody-------：${userModel.isLogin}");
     if (!userModel.isLogin) {
       return Center(
         child: ElevatedButton(
-          child: Text(GmLocalizations.of(context)?.login ?? ""),
+          child: Text(l10n.login),
           onPressed: () => Navigator.of(context).pushNamed("login"),
         ),
       );
@@ -89,7 +88,7 @@ class _HomeRouteState extends State<HomeRoute> {
               return Container(
                 alignment: Alignment.center,
                 padding: EdgeInsets.all(16.0),
-                child: Text("没有更多数据了", style: TextStyle(color: Colors.grey)),
+                child: Text(l10n.noMoreData, style: TextStyle(color: Colors.grey)),
               );
             }
           }
@@ -109,26 +108,24 @@ class _HomeRouteState extends State<HomeRoute> {
     try {
       var data = await Git(context).getRepos(
         queryParmeters: {
-          'username' : username,
+          'username': username,
           'page': page,
           'page_size': 20,
         },
       );
       //如果返回的数据小于指定的条数，则表示没有更多数据，反之则否
-      hasMore = data.length >0 && data.length % 20 ==0;
+      hasMore = data.length > 0 && data.length % 20 == 0;
       setState(() {
         _items.insertAll(_items.length - 1, data);
         page++;
       });
-    } on DioException catch(e) {
+    } on DioException catch (e) {
       if ((e.response?.statusCode ?? -1) != 200) {
           showToast(e.toString());
       }
     }
-
   }
 }
-
 
 class MyDrawer extends StatelessWidget {
   const MyDrawer({Key? key}) : super(key: key);
@@ -150,6 +147,7 @@ class MyDrawer extends StatelessWidget {
 
   Widget _buildHeader() {
     return Consumer<UserModel>(builder: (BuildContext context, UserModel value, Widget? child) {
+        final l10n = AppLocalizations.of(context);
         return GestureDetector(
           child: Container(
             color: Theme.of(context).primaryColor,
@@ -165,7 +163,7 @@ class MyDrawer extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  value.isLogin ? value.user?.login ?? "isLogined"  : GmLocalizations.of(context)?.login ?? "--",
+                  value.isLogin ? value.user?.login ?? "isLogined" : l10n.login,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -187,47 +185,46 @@ class MyDrawer extends StatelessWidget {
 
   Widget _buildMenus() {
     return Consumer<UserModel>(builder: (BuildContext context, UserModel value, Widget? child) {
-        var gm = GmLocalizations.of(context);
-        return ListView(
-          children: [
+      final l10n = AppLocalizations.of(context);
+      return ListView(
+        children: [
+          ListTile(
+            leading: Icon(Icons.color_lens),
+            title: Text(l10n.theme),
+            onTap: () => Navigator.pushNamed(context, "themes"),
+          ),
+          ListTile(
+            leading: Icon(Icons.language),
+            title: Text(l10n.language),
+            onTap: () => Navigator.pushNamed(context, "language"),
+          ),
+          if (value.isLogin)
             ListTile(
-              leading: Icon(Icons.color_lens),
-              title: Text(gm?.theme ?? "theme"),
-              onTap: () => Navigator.pushNamed(context, "themes"),
-            ),
-            ListTile(
-              leading: Icon(Icons.language),
-              title: Text(gm?.language ?? "language"),
-              onTap: () => Navigator.pushNamed(context, "language"),
-            ),
-            if (value.isLogin)
-              ListTile(
                 leading: Icon(Icons.power_settings_new),
-                title: Text(gm?.logout ?? "logout"),
+                title: Text(l10n.logout),
                 onTap: () {
-                    showDialog(context: context,
+                  showDialog(
+                      context: context,
                       builder: (ctx) {
-                         return AlertDialog(
-                           content: Text(gm?.logoutTip ?? "logoutTip"),
-                           actions: [
-                             TextButton(onPressed: () => Navigator.pop(context),
-                                 child: Text(gm?.cancel ?? "cancel")),
-
-                             TextButton(onPressed: () {
-                               // 该赋值语法会重新触发MaterialApp rebuild
-                               value.user = null;
-                               Navigator.pop(context);
-                             },
-                                 child: Text(gm?.yes ?? "yes"))
-                           ],
-                         );
-                      }
-                    );
-                }
-              ),
-          ],
-        );
-    }
-    );
+                        return AlertDialog(
+                          content: Text(l10n.logoutTip),
+                          actions: [
+                            TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: Text(l10n.cancel)),
+                            TextButton(
+                                onPressed: () {
+                                  // 该赋值语法会重新触发MaterialApp rebuild
+                                  value.user = null;
+                                  Navigator.pop(context);
+                                },
+                                child: Text(l10n.yes))
+                          ],
+                        );
+                      });
+                }),
+        ],
+      );
+    });
   }
 }

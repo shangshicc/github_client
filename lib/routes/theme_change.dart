@@ -1,8 +1,5 @@
-
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:github_client_app/l10n/localization_intl.dart';
+import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/states/profile_change_notifier.dart';
 import 'package:provider/provider.dart';
 import '../common/global.dart';
@@ -12,14 +9,16 @@ class ThemeChangeRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: Text(GmLocalizations.of(context)!.theme),
+        title: Text(l10n.theme),
       ),
       body: ListView(
         children: Global.themes.map((e) {
           return GestureDetector(
-            child: Padding(padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
               child: Container(
                 color: e,
                 height: 40,
@@ -34,5 +33,3 @@ class ThemeChangeRoute extends StatelessWidget {
     );
   }
 }
-
-

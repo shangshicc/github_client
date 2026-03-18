@@ -1,9 +1,6 @@
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:github_client_app/common/global.dart';
 import 'package:github_client_app/models/index.dart';
-import '../models/profile.dart';
 
 class ProfileChangeNotifier extends ChangeNotifier {
   Profile get _profile => Global.profile;
@@ -14,7 +11,6 @@ class ProfileChangeNotifier extends ChangeNotifier {
     super.notifyListeners(); //通知依赖的Widget更新
   }
 }
-
 
 class UserModel extends ProfileChangeNotifier {
   User? get user => _profile.user;
@@ -52,17 +48,33 @@ class ThemeModel extends ProfileChangeNotifier {
 class LocaleModel extends ProfileChangeNotifier {
   // 获取当前用户的App语言配置locale类，如果为null，则语言跟随系统语言
   Locale? getLocale() {
-    if (_profile.locale == null) {
-      return null;
-    } else {
-      var t = _profile.locale!.split("_");
-      if (t.length >= 2) return Locale(t[0], t[1]);
-      return null;
-    }
+    final locale = _profile.locale;
+    if (locale == null || locale.isEmpty) return null;
+
+    // 兼容历史存储值（旧版本使用 en_US / zh_CN）
+    if (locale == 'en_US') return const Locale('en');
+    if (locale == 'zh_CN') return const Locale('zh');
+
+    final normalized = locale.replaceAll('-', '_');
+    final parts = normalized.split('_');
+    if (parts.isEmpty || parts.first.isEmpty) return null;
+    if (parts.length == 1) return Locale(parts[0]);
+    if (parts.length == 2) return Locale(parts[0], parts[1]);
+
+    return Locale.fromSubtags(
+      languageCode: parts[0],
+      scriptCode: parts[1],
+      countryCode: parts[2],
+    );
   }
 
   // 获取当前Locale的字符串表示
-  String? get locale => _profile.locale;
+  String? get locale {
+    final locale = _profile.locale;
+    if (locale == 'en_US') return 'en';
+    if (locale == 'zh_CN') return 'zh';
+    return locale;
+  }
 
   // 用户改变App语言后，通知依赖项更新，语言会立刻更新
   set locale(String? locale) {

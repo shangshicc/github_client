@@ -1,9 +1,7 @@
-
 import 'package:dio/dio.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/common/funs.dart';
-import 'package:github_client_app/l10n/localization_intl.dart';
 import 'package:github_client_app/models/index.dart';
 import 'package:github_client_app/states/profile_change_notifier.dart';
 
@@ -46,10 +44,10 @@ class _LoginRouteState extends State<LoginRoute> {
 
   @override
   Widget build(BuildContext context) {
-    var gm = GmLocalizations.of(context);
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(gm?.login ?? "")),
-      body:Padding(
+      appBar: AppBar(title: Text(l10n.login)),
+      body: Padding(
         padding: EdgeInsets.all(10.0),
         child: Form(
           key: _formKey,
@@ -60,44 +58,45 @@ class _LoginRouteState extends State<LoginRoute> {
                 autofocus: _nameAutoFocus,
                 controller: _unameController,
                 decoration: InputDecoration(
-                  labelText: gm?.userName ?? "labelText",
-                  hintText: gm?.userName ?? "",
-                  prefixIcon: Icon(Icons.person)
-                ),
+                    labelText: l10n.userName,
+                    hintText: l10n.userName,
+                    prefixIcon: Icon(Icons.person)),
                 // 效验用户名(不能为空)
                 validator: (v) {
-                  return v==null || v.trim().isNotEmpty ? null : gm?.userNameRequired ?? "";
+                  return v == null || v.trim().isNotEmpty
+                      ? null
+                      : l10n.userNameRequired;
                 },
               ),
               TextFormField(
-                controller: _pwdController,
-                autofocus: !_nameAutoFocus,
-                decoration: InputDecoration(
-                  labelText: gm?.password ?? "labelText",
-                  hintText: gm?.password ?? "",
-                  prefixIcon: Icon(Icons.lock),
-                  suffixIcon: IconButton(
-                    icon: Icon(pwdShow ? Icons.visibility_off : Icons.visibility),
-                    onPressed: () {
-                      setState(() {
-                        pwdShow = !pwdShow;
-                      });
-                    },
-                  ),
-                ),
-                obscureText: !pwdShow,
-                validator: (v) {
-                  return v == null || v.trim().isNotEmpty ? null : gm?.passwordRequired ?? "";
-                }),
-              Padding(
-                  padding: EdgeInsets.only(top: 25),
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints.expand(height: 55.0),
-                    child: ElevatedButton(
-                      onPressed: _onLogin,
-                      child: Text(gm?.login ?? ""),
+                  controller: _pwdController,
+                  autofocus: !_nameAutoFocus,
+                  decoration: InputDecoration(
+                    labelText: l10n.password,
+                    hintText: l10n.password,
+                    prefixIcon: Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      icon: Icon(pwdShow ? Icons.visibility_off : Icons.visibility),
+                      onPressed: () {
+                        setState(() {
+                          pwdShow = !pwdShow;
+                        });
+                      },
                     ),
                   ),
+                  obscureText: !pwdShow,
+                  validator: (v) {
+                    return v == null || v.trim().isNotEmpty ? null : l10n.passwordRequired;
+                  }),
+              Padding(
+                padding: EdgeInsets.only(top: 25),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints.expand(height: 55.0),
+                  child: ElevatedButton(
+                    onPressed: _onLogin,
+                    child: Text(l10n.login),
+                  ),
+                ),
               )
             ],
           ),
@@ -107,21 +106,21 @@ class _LoginRouteState extends State<LoginRoute> {
   }
 
   void _onLogin() async {
+    final l10n = AppLocalizations.of(context);
     // 先验证各个表单字段是否合法
     if ((_formKey.currentState as FormState).validate()) {
       // showLoading
       showLoading(context);
       User? user;
       try {
-        user = await Git(context).login(_unameController.text,
-            _pwdController.text);
+        user = await Git(context).login(_unameController.text, _pwdController.text);
         // 因为登录返回后，首页会build，所以我们传入false，这样更新user后便不触发更新。
         Provider.of<UserModel>(context, listen: false).user = user;
-      } on DioException catch(e) {
+      } on DioException catch (e) {
         // 登录失败则提示
         if (e.response?.statusCode == 401) {
           // showToast
-          showToast(GmLocalizations.of(context)?.userNameOrPasswordWrong ?? "");
+          showToast(l10n.userNameOrPasswordWrong);
         } else {
           showToast(e.toString());
         }

@@ -1,5 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/routes/home_page.dart';
 import 'package:github_client_app/routes/language.dart';
 import 'package:github_client_app/routes/login.dart';
@@ -9,8 +9,6 @@ import 'package:github_client_app/states/profile_change_notifier.dart';
 import 'common/global.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'l10n/localization_intl.dart';
-
 
 void main() async {
   Global.init().then((e) => runApp(const MyApp()));
@@ -30,52 +28,69 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CounterProvider()),
 
       ],
-       child: Consumer2<ThemeModel, LocaleModel>(
-         builder: (BuildContext context, themeModel, localeModel, child) {
-           return MaterialApp(
-             theme: ThemeData(
+      child: Consumer2<ThemeModel, LocaleModel>(
+        builder: (BuildContext context, themeModel, localeModel, child) {
+          return MaterialApp(
+            theme: ThemeData(
+              primarySwatch: getaterialColor(themeModel.theme),
+            ),
+            onGenerateTitle: (context) {
+              return AppLocalizations.of(context).title;
+            },
+            home: const HomeRoute(),
+            locale: localeModel.getLocale(),
+            // 获取当前支持的语言
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: const [
+              // 当前项目的本地化语言类
+              AppLocalizations.delegate,
+              // Material/Cupertino的本地化语言类
+              GlobalMaterialLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              //组件文件排列的本地化适配类（ltr/rtl）
+              GlobalWidgetsLocalizations.delegate,
+            ],
+            localeResolutionCallback: (deviceLocale, supportedLocales) {
+              final preferred = localeModel.getLocale();
+              if (preferred != null) return preferred;
 
-               primarySwatch: getaterialColor(themeModel!.theme),
-             ),
-             onGenerateTitle: (context) {
-               return GmLocalizations.of(context)?.title ?? "";
-             },
-             home: const HomeRoute(),
-             locale: localeModel.getLocale(),
-             supportedLocales: [
-               const Locale('en', 'US'),
-               const Locale('zh', 'CN'),
-             ],
-             localizationsDelegates: [
-               // 本地化的代理类
-               GlobalMaterialLocalizations.delegate,
-               GlobalWidgetsLocalizations.delegate,
-               GmLocalizationsDelegate()
-             ],
-             localeResolutionCallback: (_locale ,supportedLocales) {
-               if (localeModel.getLocale() != null) {
-                 return localeModel.getLocale();
-               } else {
-                 //跟随系统
-                 Locale? locale;
-                 if (supportedLocales.contains(_locale)) {
-                   locale = _locale;
-                 } else {
-                   //如果系统语言不是中文简体或美国英语，则默认使用美国英语
-                   locale = const Locale('en', 'US');
-                 }
-                 return locale;
-               }
-             },
-             // 注册路由
-             routes: <String, WidgetBuilder> {
-               "login": (context) => const LoginRoute(),
-               "themes": (context) => const ThemeChangeRoute(),
-               "language": (context) => const LanguageRoute(),
-             },
-           );
-         },
-       ),
+              if (deviceLocale == null) {
+                return supportedLocales.firstWhere(
+                  (l) => l.languageCode == 'en',
+                  orElse: () => supportedLocales.first,
+                );
+              }
+
+              // 先尝试精确匹配语言 + 国家/地区
+              for (final supportedLocale in supportedLocales) {
+                if (supportedLocale.languageCode == deviceLocale.languageCode &&
+                    supportedLocale.countryCode == deviceLocale.countryCode) {
+                  return supportedLocale;
+                }
+              }
+
+              // 再退化为仅匹配语言
+              for (final supportedLocale in supportedLocales) {
+                if (supportedLocale.languageCode == deviceLocale.languageCode) {
+                  return supportedLocale;
+                }
+              }
+
+              // 如果系统语言不受支持，则默认使用英语
+              return supportedLocales.firstWhere(
+                (l) => l.languageCode == 'en',
+                orElse: () => supportedLocales.first,
+              );
+            },
+            // 注册路由
+            routes: <String, WidgetBuilder>{
+              "login": (context) => const LoginRoute(),
+              "themes": (context) => const ThemeChangeRoute(),
+              "language": (context) => const LanguageRoute(),
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -94,4 +109,3 @@ class MyApp extends StatelessWidget {
     });
   }
 }
-
