@@ -38,9 +38,11 @@ dependencies:
   # json_serializable 需要依赖的注解 https://github.com/google/json_serializable.dart/tree/master/example
   json_annotation: ^4.8.0
   dio: ^5.2.0
-  intl: ^0.18.0
+  # Flutter SDK 的 `flutter_localizations` 会将 `intl` 固定到 0.20.2（Flutter 3.41.4）。
+  # 如果需要生成/维护多语言，建议迁移掉 `intl_generator`（它要求 `intl <0.20.0`）。
+  intl: ^0.20.2
   flutter_localization: ^0.1.11
-  fluttertoast: ^8.2.2
+  # fluttertoast: ^8.2.2 # disabled: Android v1 embedding API removed in Flutter 3.41+
 
 
 
@@ -66,7 +68,8 @@ dev_dependencies:
   flukit: ^3.0.1
   # https://pub.dev/packages/cached_network_image
   cached_network_image: ^3.2.3
-  intl_generator: ^0.4.1
+  # `intl_generator` 依赖 `intl <0.20.0`，与 Flutter 3.41+ 的 `intl 0.20.2` 不兼容。
+  # 如需继续维护 ARB/多语言生成流程，建议迁移到 Flutter 内置 `gen-l10n` 或选择支持新 `intl` 的生成工具。
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
 

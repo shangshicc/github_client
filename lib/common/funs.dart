@@ -1,7 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 
 Widget gmAvatar(
   String url, {
@@ -26,18 +25,16 @@ Widget gmAvatar(
   );
 }
 
-void showToast(String text, {
-    gravity = ToastGravity.CENTER,
-    toastLength = Toast.LENGTH_SHORT,
+void showToast(
+  String text, {
+  Object? gravity,
+  Object? toastLength,
 }) {
-  Fluttertoast.showToast(
-    msg: text,
-    toastLength: Toast.LENGTH_SHORT,
-    gravity: ToastGravity.BOTTOM,
-    timeInSecForIosWeb: 1,
-    backgroundColor: Colors.grey[600],
-    fontSize: 16.0,
-  );
+  // `fluttertoast` is intentionally disabled to keep Android builds working with
+  // newer Flutter versions (v1 embedding APIs were removed).
+  // Keep a lightweight fallback for debugging.
+  if (text.trim().isEmpty) return;
+  debugPrint('[toast disabled] $text');
 }
 
 void showLoading(context, [String? text]) {
