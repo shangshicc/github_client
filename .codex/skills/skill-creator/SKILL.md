@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.
+description: Create new skills, add skill directories, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, add a new skill, edit, review, refactor, split, merge, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, optimize a skill's description for better triggering accuracy, or improve a skill's structure using SKILL.md, references, scripts, and assets.
 ---
 
 # Skill Creator
@@ -107,6 +107,20 @@ cloud-deploy/
     └── azure.md
 ```
 Claude reads only the relevant reference file.
+
+#### Skill 架构
+
+当用户要求创建、新增、修改、审查、重构、拆分、合并或优化任何 Skill 时，先读取 `references/skill-architecture.md`，再修改文件。
+
+使用该 reference 作为通用架构指南，用于判断：
+- Skill 目录结构如何设计
+- 哪些内容应放在 `SKILL.md`
+- 什么时候应拆分到 `references/`
+- 什么时候应新增 `scripts/` 或 `assets/`
+- 如何编写 `name` 和 `description`
+- 如何检查重复规则、冲突规则、安全边界、输出格式和停止条件
+
+小范围修改只读取相关章节；新建 Skill 或结构性重构时读取完整 reference。
 
 #### Principle of Lack of Surprise
 
@@ -466,6 +480,7 @@ The agents/ directory contains instructions for specialized subagents. Read them
 
 The references/ directory has additional documentation:
 - `references/schemas.md` — JSON structures for evals.json, grading.json, etc.
+- `references/skill-architecture.md` — 中文 Skill 架构规范，用于创建、新增、审查、重构、拆分、合并和维护 Skill 结构。
 
 ---
 
