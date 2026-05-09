@@ -72,7 +72,7 @@ class _HomeRouteState extends State<HomeRoute> {
           if (_items[index].name == loadingTag) {
             if (hasMore) {
               // 获取数据
-              _retriieveDate(userModel.user?.login ?? "_retriieveDate login");
+              _retrieveDate(userModel.user?.login ?? "_retriieveDate login");
               // 加载时显示loading
               return Container(
                 padding: EdgeInsets.all(16.0),
@@ -84,7 +84,7 @@ class _HomeRouteState extends State<HomeRoute> {
                 ),
               );
             } else {
-              // 已经加载了100条数据，不在获取数据
+              // 没有更多数据，不再加载数据
               return Container(
                 alignment: Alignment.center,
                 padding: EdgeInsets.all(16.0),
@@ -104,7 +104,7 @@ class _HomeRouteState extends State<HomeRoute> {
   }
 
   // 请求数据
-  void _retriieveDate(String username) async {
+  void _retrieveDate(String username) async {
     try {
       var data = await Git(context).getRepos(
         queryParmeters: {

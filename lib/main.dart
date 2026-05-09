@@ -28,7 +28,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => UserModel()),
         ChangeNotifierProvider(create: (_) => LocaleModel()),
         ChangeNotifierProvider(create: (_) => CounterProvider()),
-
       ],
       child: Consumer2<ThemeModel, LocaleModel>(
         builder: (BuildContext context, themeModel, localeModel, child) {

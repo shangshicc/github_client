@@ -33,9 +33,9 @@ void showToast(
 }) {
   if (text.trim().isEmpty) return;
   Fluttertoast.showToast(
-      msg: "This is Center Short Toast",
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.CENTER,
+      msg: text,
+      toastLength: (toastLength as Toast?) ?? Toast.LENGTH_SHORT,
+      gravity: (gravity as ToastGravity?) ?? ToastGravity.CENTER,
       timeInSecForIosWeb: 1,
       backgroundColor: Colors.red,
       textColor: Colors.white,
