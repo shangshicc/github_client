@@ -13,9 +13,9 @@ description: github_client Flutter 项目开发通用 Skill。Codex 在 /Users/c
 
 - 回答必须使用中文。
 - 优先遵循用户当前请求。
-- 优先遵循项目根目录的 `AGENTS.md`、`README.md`、`analysis_options.yaml` 和现有代码约定。
+- 优先遵循项目根目录的 `analysis_options.yaml` 和现有代码约定。
 - 修改代码前必须先提供修改方案和目标代码，等待用户确认后再修改。
-- 新增页面代码遵循 clean 架构。
+- 请按生产级别商业项目进行操作，代码实现时要简洁，要考虑复用性和可读性，必要的时候可以使用缓存
 - 修改已有模块时遵循历史代码架构，不强行重构为 clean 架构。
 - 不主动编写单元测试。
 - 不做无关重构。
@@ -23,6 +23,7 @@ description: github_client Flutter 项目开发通用 Skill。Codex 在 /Users/c
 - 不手动修改生成文件。
 - 不提交、不打印、不暴露 GitHub Token、Authorization Header、密码或其他敏感信息。
 - 保持改动范围最小，优先完成用户明确要求。
+- 关键业务路径(包含错误路径)添加logger日志用于问题定位
 
 ## 项目结构
 
@@ -198,7 +199,7 @@ dart run build_runner build --delete-conflicting-outputs
 
 ## 注释规则
 
-每个新增方法都必须添加中文注释。
+每个新增方法都必须添加中文注释。着重解释为什么
 
 注释必须说明：
 
