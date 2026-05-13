@@ -23,7 +23,30 @@ description: github_client Flutter 项目开发通用 Skill。Codex 在 /Users/c
 - 不手动修改生成文件。
 - 不提交、不打印、不暴露 GitHub Token、Authorization Header、密码或其他敏感信息。
 - 保持改动范围最小，优先完成用户明确要求。
-- 关键业务路径(包含错误路径)添加logger日志用于问题定位
+
+## 日志要求
+
+新增或修改涉及业务逻辑、状态流转、异步请求、异常处理的代码时，必须补充日志，统一使用 `lib/common/logger.dart` 中的 `createLogger()`，不使用 `print()` 作为常规业务日志方案。
+
+最低要求：
+
+- 核心链路入口必须记录日志
+- 请求成功或关键状态完成后必须记录日志
+- 空态、跳过执行、降级分支必须记录日志
+- catch 异常分支必须记录错误日志，并附带 `error` 与 `stackTrace`
+
+日志必须满足以下要求：
+
+- 能说明当前模块、当前动作、关键参数和执行结果
+- 不打印 token、Authorization、密码、Cookie 等敏感信息
+- 不在高频 `build()`、列表 item 构建、动画回调中打印重复日志
+- 如果当前模块已有 logger，优先复用，不重复创建
+
+当任务涉及 Provider、Repository、Service、分页、刷新、重试、缓存、网络请求等场景时，先参考：
+
+- `references/logging-guidelines.md`
+- `templates/provider-logging-template.md`
+- `templates/repository-logging-template.md`
 
 ## 项目结构
 
@@ -152,6 +175,8 @@ lib/routes/<feature_name>/
 - 不在 UI 层直接堆叠复杂网络逻辑。
 - 按已有模型和仓储风格解析响应。
 - 错误信息面向用户时保持友好，调试信息不得包含敏感数据。
+
+
 
 ## 模型和生成文件规则
 
