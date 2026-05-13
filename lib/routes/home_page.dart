@@ -106,7 +106,7 @@ class _HomeRouteState extends State<HomeRoute> {
   // 请求数据
   void _retrieveDate(String username) async {
     try {
-      var data = await Git(context).getRepos(
+      var data = await Git().getRepos(
         queryParmeters: {
           'username': username,
           'page': page,

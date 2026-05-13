@@ -104,11 +104,129 @@
     "placeholders_order": [],
     "placeholders": {}
   },
+  "retry": "Retry",
+  "@retry": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loadFailed": "Load failed",
+  "@loadFailed": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "repoEmpty": "No repositories yet",
+  "@repoEmpty": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "moreData": "More data",
+  "@moreData": {
+    "description": "Shown at the bottom of the list when more pages can still be loaded.",
+    "type": "text",
+    "placeholders": {}
+  },
   "noMoreData": "No more data.",
   "@noMoreData": {
     "description": "Shown at the bottom of the list when there is no more data to load.",
     "type": "text",
     "placeholders": {}
+  },
+  "demoList": "List Demo",
+  "@demoList": {
+    "description": "Entry and title for the list demo page.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoListLoading": "Loading...",
+  "@demoListLoading": {
+    "description": "Shown while the list demo is loading data.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoListLoadingMore": "Loading more...",
+  "@demoListLoadingMore": {
+    "description": "Shown when the list demo is loading the next page.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoListEmpty": "No data currently",
+  "@demoListEmpty": {
+    "description": "Shown when the list demo request succeeds but returns no data.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoListLoadFailed": "Failed to load. Please try again later.",
+  "@demoListLoadFailed": {
+    "description": "Shown when the list demo request fails.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoListRefreshData": "Refresh data",
+  "@demoListRefreshData": {
+    "description": "Button text for refreshing data in the list demo.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScroll": "NestedScrollView Demo",
+  "@demoNestedScroll": {
+    "description": "Entry and title for the NestedScrollView demo page.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollProfileBio": "Demonstrates the most common profile scrolling layout: collapse the header first, pin the TabBar, and keep each tab scrolling independently.",
+  "@demoNestedScrollProfileBio": {
+    "description": "Profile bio shown in the NestedScrollView demo header.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollStatsRepos": "Repos",
+  "@demoNestedScrollStatsRepos": {
+    "description": "Repository count label in the NestedScrollView demo header.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollStatsFollowers": "Followers",
+  "@demoNestedScrollStatsFollowers": {
+    "description": "Followers count label in the NestedScrollView demo header.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollStatsFollowing": "Following",
+  "@demoNestedScrollStatsFollowing": {
+    "description": "Following count label in the NestedScrollView demo header.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollTabRepositories": "Repositories",
+  "@demoNestedScrollTabRepositories": {
+    "description": "Repositories tab label in the NestedScrollView demo.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollTabActivity": "Activity",
+  "@demoNestedScrollTabActivity": {
+    "description": "Activity tab label in the NestedScrollView demo.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollTabStars": "Stars",
+  "@demoNestedScrollTabStars": {
+    "description": "Stars tab label in the NestedScrollView demo.",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollListItemSubtitle": "Item {index} · Used to demonstrate how {itemTitle} keeps scrolling independently inside the inner list",
+  "@demoNestedScrollListItemSubtitle": {
+    "description": "Subtitle shown for each list item in the NestedScrollView demo.",
+    "type": "text",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "itemTitle": {
+        "type": "String"
+      }
+    }
   },
   "demo": "demo"
 }

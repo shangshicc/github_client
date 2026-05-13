@@ -200,11 +200,125 @@ abstract class AppLocalizations {
   /// **'cancel'**
   String get cancel;
 
+  /// No description provided for @retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get retry;
+
+  /// No description provided for @loadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Load failed'**
+  String get loadFailed;
+
+  /// No description provided for @repoEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No repositories yet'**
+  String get repoEmpty;
+
+  /// Shown at the bottom of the list when more pages can still be loaded.
+  ///
+  /// In en, this message translates to:
+  /// **'More data'**
+  String get moreData;
+
   /// Shown at the bottom of the list when there is no more data to load.
   ///
   /// In en, this message translates to:
   /// **'No more data.'**
   String get noMoreData;
+
+  /// Entry and title for the list demo page.
+  ///
+  /// In en, this message translates to:
+  /// **'List Demo'**
+  String get demoList;
+
+  /// Shown while the list demo is loading data.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading...'**
+  String get demoListLoading;
+
+  /// Shown when the list demo is loading the next page.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading more...'**
+  String get demoListLoadingMore;
+
+  /// Shown when the list demo request succeeds but returns no data.
+  ///
+  /// In en, this message translates to:
+  /// **'No data currently'**
+  String get demoListEmpty;
+
+  /// Shown when the list demo request fails.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load. Please try again later.'**
+  String get demoListLoadFailed;
+
+  /// Button text for refreshing data in the list demo.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh data'**
+  String get demoListRefreshData;
+
+  /// Entry and title for the NestedScrollView demo page.
+  ///
+  /// In en, this message translates to:
+  /// **'NestedScrollView Demo'**
+  String get demoNestedScroll;
+
+  /// Profile bio shown in the NestedScrollView demo header.
+  ///
+  /// In en, this message translates to:
+  /// **'Demonstrates the most common profile scrolling layout: collapse the header first, pin the TabBar, and keep each tab scrolling independently.'**
+  String get demoNestedScrollProfileBio;
+
+  /// Repository count label in the NestedScrollView demo header.
+  ///
+  /// In en, this message translates to:
+  /// **'Repos'**
+  String get demoNestedScrollStatsRepos;
+
+  /// Followers count label in the NestedScrollView demo header.
+  ///
+  /// In en, this message translates to:
+  /// **'Followers'**
+  String get demoNestedScrollStatsFollowers;
+
+  /// Following count label in the NestedScrollView demo header.
+  ///
+  /// In en, this message translates to:
+  /// **'Following'**
+  String get demoNestedScrollStatsFollowing;
+
+  /// Repositories tab label in the NestedScrollView demo.
+  ///
+  /// In en, this message translates to:
+  /// **'Repositories'**
+  String get demoNestedScrollTabRepositories;
+
+  /// Activity tab label in the NestedScrollView demo.
+  ///
+  /// In en, this message translates to:
+  /// **'Activity'**
+  String get demoNestedScrollTabActivity;
+
+  /// Stars tab label in the NestedScrollView demo.
+  ///
+  /// In en, this message translates to:
+  /// **'Stars'**
+  String get demoNestedScrollTabStars;
+
+  /// Subtitle shown for each list item in the NestedScrollView demo.
+  ///
+  /// In en, this message translates to:
+  /// **'Item {index} · Used to demonstrate how {itemTitle} keeps scrolling independently inside the inner list'**
+  String demoNestedScrollListItemSubtitle(int index, String itemTitle);
 
   /// No description provided for @demo.
   ///

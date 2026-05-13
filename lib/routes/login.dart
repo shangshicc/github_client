@@ -113,7 +113,7 @@ class _LoginRouteState extends State<LoginRoute> {
       showLoading(context);
       User? user;
       try {
-        user = await Git(context).login(_unameController.text, _pwdController.text);
+        user = await Git().login(_unameController.text, _pwdController.text);
         // 因为登录返回后，首页会build，所以我们传入false，这样更新user后便不触发更新。
         Provider.of<UserModel>(context, listen: false).user = user;
       } on DioException catch (e) {

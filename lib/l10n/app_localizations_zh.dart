@@ -60,7 +60,67 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cancel => '取消';
 
   @override
+  String get retry => '重试';
+
+  @override
+  String get loadFailed => '加载失败';
+
+  @override
+  String get repoEmpty => '暂无仓库数据';
+
+  @override
+  String get moreData => '更多数据';
+
+  @override
   String get noMoreData => '没有更多数据了';
+
+  @override
+  String get demoList => '列表 Demo';
+
+  @override
+  String get demoListLoading => '加载中...';
+
+  @override
+  String get demoListLoadingMore => '加载更多...';
+
+  @override
+  String get demoListEmpty => '当前无数据';
+
+  @override
+  String get demoListLoadFailed => '获取失败，请稍候重试';
+
+  @override
+  String get demoListRefreshData => '刷新数据';
+
+  @override
+  String get demoNestedScroll => 'NestedScrollView Demo';
+
+  @override
+  String get demoNestedScrollProfileBio =>
+      '演示个人主页中最常见的滚动结构：头部区域先折叠，TabBar 吸顶后，每个标签页继续独立滚动。';
+
+  @override
+  String get demoNestedScrollStatsRepos => '仓库';
+
+  @override
+  String get demoNestedScrollStatsFollowers => '关注者';
+
+  @override
+  String get demoNestedScrollStatsFollowing => '正在关注';
+
+  @override
+  String get demoNestedScrollTabRepositories => 'Repositories';
+
+  @override
+  String get demoNestedScrollTabActivity => 'Activity';
+
+  @override
+  String get demoNestedScrollTabStars => 'Stars';
+
+  @override
+  String demoNestedScrollListItemSubtitle(int index, String itemTitle) {
+    return '第$index项 · 用于演示 $itemTitle 在内层列表中的独立滚动效果';
+  }
 
   @override
   String get demo => '样例';

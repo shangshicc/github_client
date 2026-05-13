@@ -60,7 +60,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cancel => 'cancel';
 
   @override
+  String get retry => 'Retry';
+
+  @override
+  String get loadFailed => 'Load failed';
+
+  @override
+  String get repoEmpty => 'No repositories yet';
+
+  @override
+  String get moreData => 'More data';
+
+  @override
   String get noMoreData => 'No more data.';
+
+  @override
+  String get demoList => 'List Demo';
+
+  @override
+  String get demoListLoading => 'Loading...';
+
+  @override
+  String get demoListLoadingMore => 'Loading more...';
+
+  @override
+  String get demoListEmpty => 'No data currently';
+
+  @override
+  String get demoListLoadFailed => 'Failed to load. Please try again later.';
+
+  @override
+  String get demoListRefreshData => 'Refresh data';
+
+  @override
+  String get demoNestedScroll => 'NestedScrollView Demo';
+
+  @override
+  String get demoNestedScrollProfileBio =>
+      'Demonstrates the most common profile scrolling layout: collapse the header first, pin the TabBar, and keep each tab scrolling independently.';
+
+  @override
+  String get demoNestedScrollStatsRepos => 'Repos';
+
+  @override
+  String get demoNestedScrollStatsFollowers => 'Followers';
+
+  @override
+  String get demoNestedScrollStatsFollowing => 'Following';
+
+  @override
+  String get demoNestedScrollTabRepositories => 'Repositories';
+
+  @override
+  String get demoNestedScrollTabActivity => 'Activity';
+
+  @override
+  String get demoNestedScrollTabStars => 'Stars';
+
+  @override
+  String demoNestedScrollListItemSubtitle(int index, String itemTitle) {
+    return 'Item $index · Used to demonstrate how $itemTitle keeps scrolling independently inside the inner list';
+  }
 
   @override
   String get demo => 'demo';

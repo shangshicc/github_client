@@ -87,11 +87,129 @@
     "type": "text",
     "placeholders": {}
   },
+  "retry": "重试",
+  "@retry": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "loadFailed": "加载失败",
+  "@loadFailed": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "repoEmpty": "暂无仓库数据",
+  "@repoEmpty": {
+    "type": "text",
+    "placeholders": {}
+  },
+  "moreData": "更多数据",
+  "@moreData": {
+    "description": "列表底部仍可继续加载时显示",
+    "type": "text",
+    "placeholders": {}
+  },
   "noMoreData": "没有更多数据了",
   "@noMoreData": {
     "description": "列表底部没有更多内容时显示",
     "type": "text",
     "placeholders": {}
   },
-   "demo": "样例"
+  "demoList": "列表 Demo",
+  "@demoList": {
+    "description": "列表 Demo 页面入口和标题",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoListLoading": "加载中...",
+  "@demoListLoading": {
+    "description": "列表 Demo 加载数据时显示",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoListLoadingMore": "加载更多...",
+  "@demoListLoadingMore": {
+    "description": "列表 Demo 加载下一页时显示",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoListEmpty": "当前无数据",
+  "@demoListEmpty": {
+    "description": "列表 Demo 请求成功但无数据时显示",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoListLoadFailed": "获取失败，请稍候重试",
+  "@demoListLoadFailed": {
+    "description": "列表 Demo 请求失败时显示",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoListRefreshData": "刷新数据",
+  "@demoListRefreshData": {
+    "description": "列表 Demo 刷新按钮文案",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScroll": "NestedScrollView Demo",
+  "@demoNestedScroll": {
+    "description": "NestedScrollView Demo 页面入口和标题",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollProfileBio": "演示个人主页中最常见的滚动结构：头部区域先折叠，TabBar 吸顶后，每个标签页继续独立滚动。",
+  "@demoNestedScrollProfileBio": {
+    "description": "NestedScrollView Demo 顶部个人简介",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollStatsRepos": "仓库",
+  "@demoNestedScrollStatsRepos": {
+    "description": "NestedScrollView Demo 头部仓库统计项",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollStatsFollowers": "关注者",
+  "@demoNestedScrollStatsFollowers": {
+    "description": "NestedScrollView Demo 头部关注者统计项",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollStatsFollowing": "正在关注",
+  "@demoNestedScrollStatsFollowing": {
+    "description": "NestedScrollView Demo 头部关注中统计项",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollTabRepositories": "Repositories",
+  "@demoNestedScrollTabRepositories": {
+    "description": "NestedScrollView Demo 仓库标签文案",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollTabActivity": "Activity",
+  "@demoNestedScrollTabActivity": {
+    "description": "NestedScrollView Demo 动态标签文案",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollTabStars": "Stars",
+  "@demoNestedScrollTabStars": {
+    "description": "NestedScrollView Demo 星标标签文案",
+    "type": "text",
+    "placeholders": {}
+  },
+  "demoNestedScrollListItemSubtitle": "第{index}项 · 用于演示 {itemTitle} 在内层列表中的独立滚动效果",
+  "@demoNestedScrollListItemSubtitle": {
+    "description": "NestedScrollView Demo 列表项副标题",
+    "type": "text",
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "itemTitle": {
+        "type": "String"
+      }
+    }
+  },
+  "demo": "样例"
 }

@@ -9,11 +9,13 @@ import 'package:github_client_app/models/index.dart';
 
 class Git {
 
-  Git([this.context]) {
-    _options = Options(extra: {"context": context});
+  Git() {
+    _options = Options(
+        // extra: {"context": context}
+    );
   }
 
-  BuildContext? context;
+  // BuildContext? context;
   late Options _options;
   static Dio dio = Dio(BaseOptions(
     baseUrl: 'https://api.github.com/',
