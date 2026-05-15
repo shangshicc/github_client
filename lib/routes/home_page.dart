@@ -1,26 +1,27 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart'
+    show ConsumerState, ConsumerStatefulWidget;
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/common/funs.dart';
 import 'package:github_client_app/common/git_api.dart';
 import 'package:github_client_app/models/index.dart';
 import 'package:github_client_app/routes/detail_page.dart';
 import 'package:github_client_app/routes/selector_page.dart';
-import 'package:github_client_app/states/counter_provider.dart';
-import 'package:provider/provider.dart';
+import 'package:github_client_app/states/riverpod/counter_provider.dart';
+import 'package:provider/provider.dart' as provider_pkg;
 
-import '../common/global.dart';
 import '../states/profile_change_notifier.dart';
 import '../widgets/repo_item.dart';
 
-class HomeRoute extends StatefulWidget {
+class HomeRoute extends ConsumerStatefulWidget {
   const HomeRoute({Key? key}) : super(key: key);
 
   @override
-  State<HomeRoute> createState() => _HomeRouteState();
+  ConsumerState<HomeRoute> createState() => _HomeRouteState();
 }
 
-class _HomeRouteState extends State<HomeRoute> {
+class _HomeRouteState extends ConsumerState<HomeRoute> {
   static const loadingTag = "##loading##"; //表尾标记
   final _items = <Repo>[Repo()..name = loadingTag];
   bool hasMore = true; //是否还有数据
@@ -29,35 +30,35 @@ class _HomeRouteState extends State<HomeRoute> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final int counter = ref.watch(counterProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.home),
         actions: [
-          Consumer<CounterProvider>(
-            builder: (context, value, child) {
-              return Text('click  ${value.counter}',
-                  style: const TextStyle(
-                    color: Colors.red,
-                    fontSize: 18,
-                    fontWeight: FontWeight.normal,
-                  ));
-            },
+          Text(
+            'click  $counter',
+            style: const TextStyle(
+              color: Colors.red,
+              fontSize: 18,
+              fontWeight: FontWeight.normal,
+            ),
           )
         ],
       ),
       body: _buildBody(), // 构建主页面
       drawer: const MyDrawer(), //构建抽屉组件
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
-        onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const SelectorPage())),
+        child: const Icon(Icons.add),
+        onPressed: () => Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const SelectorPage()),
+        ),
       ),
     );
   }
 
   Widget _buildBody() {
     final l10n = AppLocalizations.of(context);
-    UserModel userModel = Provider.of<UserModel>(context);
-    print("_buildBody-------：${userModel.isLogin}");
+    final UserModel userModel = provider_pkg.Provider.of<UserModel>(context);
     if (!userModel.isLogin) {
       return Center(
         child: ElevatedButton(
@@ -75,9 +76,9 @@ class _HomeRouteState extends State<HomeRoute> {
               _retrieveDate(userModel.user?.login ?? "_retriieveDate login");
               // 加载时显示loading
               return Container(
-                padding: EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(16.0),
                 alignment: Alignment.center,
-                child: SizedBox(
+                child: const SizedBox(
                   width: 24.0,
                   height: 24.0,
                   child: CircularProgressIndicator(strokeWidth: 2.0),
@@ -87,17 +88,23 @@ class _HomeRouteState extends State<HomeRoute> {
               // 没有更多数据，不再加载数据
               return Container(
                 alignment: Alignment.center,
-                padding: EdgeInsets.all(16.0),
-                child: Text(l10n.noMoreData, style: TextStyle(color: Colors.grey)),
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  l10n.noMoreData,
+                  style: const TextStyle(color: Colors.grey),
+                ),
               );
             }
           }
           //显示单词列表项
           return GestureDetector(
             onTap: () {
-              Navigator.of(context).push(MaterialPageRoute(builder: (context) => DetailPage()));
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const DetailPage()),
+              );
             },
-              child: RepoItem(_items[index]));
+            child: RepoItem(_items[index]),
+          );
         },
       );
     }
@@ -114,14 +121,14 @@ class _HomeRouteState extends State<HomeRoute> {
         },
       );
       //如果返回的数据小于指定的条数，则表示没有更多数据，反之则否
-      hasMore = data.length > 0 && data.length % 20 == 0;
+      hasMore = data.isNotEmpty && data.length % 20 == 0;
       setState(() {
         _items.insertAll(_items.length - 1, data);
         page++;
       });
     } on DioException catch (e) {
       if ((e.response?.statusCode ?? -1) != 200) {
-          showToast(e.toString());
+        showToast(e.toString());
       }
     }
   }
@@ -133,7 +140,8 @@ class MyDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Drawer(
-      child: MediaQuery.removePadding(context: context,
+      child: MediaQuery.removePadding(
+          context: context,
           removeBottom: true,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,25 +154,30 @@ class MyDrawer extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return Consumer<UserModel>(builder: (BuildContext context, UserModel value, Widget? child) {
+    return provider_pkg.Consumer<UserModel>(
+      builder: (BuildContext context, UserModel value, Widget? child) {
         final l10n = AppLocalizations.of(context);
         return GestureDetector(
           child: Container(
             color: Theme.of(context).primaryColor,
-            padding: EdgeInsets.only(top: 40, bottom: 20),
+            padding: const EdgeInsets.only(top: 40, bottom: 20),
             child: Row(
               children: [
-                Padding(padding: EdgeInsets.symmetric(horizontal: 10),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: ClipOval(
                     // 如果已登录，则显示用户头像；若未登录，则显示默认头像
-                  child: value.isLogin ? gmAvatar(value.user?.avatar_url ?? "",
-                      width: 80
-                    ) : Image.asset("imgs/avatar-default.png", width: 80,),
+                    child: value.isLogin
+                        ? gmAvatar(value.user?.avatar_url ?? "", width: 80)
+                        : Image.asset(
+                            "imgs/avatar-default.png",
+                            width: 80,
+                          ),
                   ),
                 ),
                 Text(
                   value.isLogin ? value.user?.login ?? "isLogined" : l10n.login,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
@@ -178,34 +191,34 @@ class MyDrawer extends StatelessWidget {
             }
           },
         );
-    },
-
+      },
     );
   }
 
   Widget _buildMenus() {
-    return Consumer<UserModel>(builder: (BuildContext context, UserModel value, Widget? child) {
+    return provider_pkg.Consumer<UserModel>(
+        builder: (BuildContext context, UserModel value, Widget? child) {
       final l10n = AppLocalizations.of(context);
       return ListView(
         children: [
           ListTile(
-            leading: Icon(Icons.color_lens),
+            leading: const Icon(Icons.color_lens),
             title: Text(l10n.theme),
             onTap: () => Navigator.pushNamed(context, "themes"),
           ),
           ListTile(
-            leading: Icon(Icons.language),
+            leading: const Icon(Icons.language),
             title: Text(l10n.language),
             onTap: () => Navigator.pushNamed(context, "language"),
           ),
           ListTile(
-            leading: Icon(Icons.info),
+            leading: const Icon(Icons.info),
             title: Text(l10n.demo),
             onTap: () => Navigator.pushNamed(context, "demo"),
           ),
           if (value.isLogin)
             ListTile(
-                leading: Icon(Icons.power_settings_new),
+                leading: const Icon(Icons.power_settings_new),
                 title: Text(l10n.logout),
                 onTap: () {
                   showDialog(
