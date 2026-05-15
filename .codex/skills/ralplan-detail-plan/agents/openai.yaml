@@ -1,0 +1,7 @@
+display_name: Ralplan 细化方案
+short_description: 基于 ralplan 最终方案生成中文步骤化实施方案与 Mermaid 流程图
+default_prompt: |
+  请基于当前的 ralplan 最终方案，生成一份中文细化实施方案：
+  1. 按功能拆分为至少 3 个步骤
+  2. 每个步骤都补 Mermaid 流程图
+  3. 每个步骤明确目标、输入、执行动作、输出、依赖和验收点

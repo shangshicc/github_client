@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' show ProviderScope;
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/routes/home_page.dart';
 import 'package:github_client_app/routes/language.dart';
@@ -13,7 +14,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'routes/demo.dart';
 
 void main() async {
-  Global.init().then((e) => runApp(const MyApp()));
+  Global.init().then((e) => runApp(const ProviderScope(child: MyApp())));
 }
 
 class MyApp extends StatelessWidget {
@@ -97,7 +98,7 @@ class MyApp extends StatelessWidget {
   }
 
   MaterialColor getaterialColor(ColorSwatch themeModel) {
-    return MaterialColor(themeModel.value, <int, Color>{
+    return MaterialColor(themeModel.toARGB32(), <int, Color>{
       50: themeModel[50]!,
       100: themeModel[100]!,
       200: themeModel[200]!,
