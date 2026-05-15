@@ -34,6 +34,7 @@ description: github_client Flutter 项目开发通用 Skill。Codex 在 /Users/c
 - 请求成功或关键状态完成后必须记录日志
 - 空态、跳过执行、降级分支必须记录日志
 - catch 异常分支必须记录错误日志，并附带 `error` 与 `stackTrace`
+- 使用英文作为日志语言
 
 日志必须满足以下要求：
 
