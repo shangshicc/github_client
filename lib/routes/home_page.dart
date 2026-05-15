@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
-    show Consumer, ConsumerState, ConsumerStatefulWidget, WidgetRef;
+    show ConsumerState, ConsumerStatefulWidget, ConsumerWidget, WidgetRef;
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/common/funs.dart';
 import 'package:github_client_app/common/git_api.dart';
@@ -156,105 +156,118 @@ class MyDrawer extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return Consumer(
-      builder: (BuildContext context, WidgetRef ref, Widget? child) {
-        final l10n = AppLocalizations.of(context);
-        final bool login = ref.watch(isLoginProvider);
-        final User? user = ref.watch(userProvider);
-        final MaterialColor themeColor = ref.watch(themeProvider);
-        _log.i(
-          'Drawer header build, login=$login, user=${user?.login ?? "null"}, '
-          'providerTheme=${themeColor.toARGB32()}',
-        );
-        return GestureDetector(
-          child: Container(
-            color: themeColor,
-            padding: const EdgeInsets.only(top: 40, bottom: 20),
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: ClipOval(
-                    // 如果已登录，则显示用户头像；若未登录，则显示默认头像
-                    child: login
-                        ? gmAvatar(user?.avatar_url ?? "", width: 80)
-                        : Image.asset(
-                            "imgs/avatar-default.png",
-                            width: 80,
-                          ),
-                  ),
-                ),
-                Text(
-                  login ? user?.login ?? "isLogined" : l10n.login,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          onTap: () {
-            if (!login) {
-              Navigator.of(context).pushNamed("login");
-            }
-          },
-        );
-      },
-    );
+    return const _DrawerHeaderSection();
   }
 
   Widget _buildMenus() {
-    return Consumer(
-        builder: (BuildContext context, WidgetRef ref, Widget? child) {
-      final bool login = ref.watch(isLoginProvider);
-      final l10n = AppLocalizations.of(context);
-      return ListView(
-        children: [
+    return const _DrawerMenusSection();
+  }
+}
+
+/// 抽屉头部区域，统一使用 Riverpod ConsumerWidget 消费用户与主题状态。
+class _DrawerHeaderSection extends ConsumerWidget {
+  const _DrawerHeaderSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final bool login = ref.watch(isLoginProvider);
+    final User? user = ref.watch(userProvider);
+    final MaterialColor themeColor = ref.watch(themeProvider);
+    _log.i(
+      'Drawer header build, login=$login, user=${user?.login ?? "null"}, '
+      'providerTheme=${themeColor.toARGB32()}',
+    );
+    return GestureDetector(
+      child: Container(
+        color: themeColor,
+        padding: const EdgeInsets.only(top: 40, bottom: 20),
+        child: Row(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: ClipOval(
+                // 如果已登录，则显示用户头像；若未登录，则显示默认头像
+                child: login
+                    ? gmAvatar(user?.avatar_url ?? "", width: 80)
+                    : Image.asset(
+                        "imgs/avatar-default.png",
+                        width: 80,
+                      ),
+              ),
+            ),
+            Text(
+              login ? user?.login ?? "isLogined" : l10n.login,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+      onTap: () {
+        if (!login) {
+          Navigator.of(context).pushNamed("login");
+        }
+      },
+    );
+  }
+}
+
+/// 抽屉菜单区域，统一使用 Riverpod ConsumerWidget 消费登录状态。
+class _DrawerMenusSection extends ConsumerWidget {
+  const _DrawerMenusSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final bool login = ref.watch(isLoginProvider);
+    final l10n = AppLocalizations.of(context);
+    return ListView(
+      children: [
+        ListTile(
+          leading: const Icon(Icons.color_lens),
+          title: Text(l10n.theme),
+          onTap: () => Navigator.pushNamed(context, "themes"),
+        ),
+        ListTile(
+          leading: const Icon(Icons.language),
+          title: Text(l10n.language),
+          onTap: () => Navigator.pushNamed(context, "language"),
+        ),
+        ListTile(
+          leading: const Icon(Icons.info),
+          title: Text(l10n.demo),
+          onTap: () => Navigator.pushNamed(context, "demo"),
+        ),
+        if (login)
           ListTile(
-            leading: const Icon(Icons.color_lens),
-            title: Text(l10n.theme),
-            onTap: () => Navigator.pushNamed(context, "themes"),
-          ),
-          ListTile(
-            leading: const Icon(Icons.language),
-            title: Text(l10n.language),
-            onTap: () => Navigator.pushNamed(context, "language"),
-          ),
-          ListTile(
-            leading: const Icon(Icons.info),
-            title: Text(l10n.demo),
-            onTap: () => Navigator.pushNamed(context, "demo"),
-          ),
-          if (login)
-            ListTile(
-                leading: const Icon(Icons.power_settings_new),
-                title: Text(l10n.logout),
-                onTap: () {
-                  showDialog(
-                      context: context,
-                      builder: (ctx) {
-                        return AlertDialog(
-                          content: Text(l10n.logoutTip),
-                          actions: [
-                            TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: Text(l10n.cancel)),
-                            TextButton(
-                                onPressed: () {
-                                  // 该赋值语法会重新触发MaterialApp rebuild
-                                  ref
-                                      .read(profileProvider.notifier)
-                                      .updateUser(null);
-                                  Navigator.pop(context);
-                                },
-                                child: Text(l10n.yes))
-                          ],
-                        );
-                      });
-                }),
-        ],
-      );
-    });
+              leading: const Icon(Icons.power_settings_new),
+              title: Text(l10n.logout),
+              onTap: () {
+                showDialog(
+                    context: context,
+                    builder: (ctx) {
+                      return AlertDialog(
+                        content: Text(l10n.logoutTip),
+                        actions: [
+                          TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: Text(l10n.cancel)),
+                          TextButton(
+                              onPressed: () {
+                                // 该赋值语法会重新触发MaterialApp rebuild
+                                ref.read(profileProvider.notifier).updateUser(
+                                      null,
+                                    );
+                                Navigator.pop(context);
+                              },
+                              child: Text(l10n.yes))
+                        ],
+                      );
+                    });
+              }),
+      ],
+    );
   }
 }
