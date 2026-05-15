@@ -1,42 +1,34 @@
 import 'package:easy_refresh/easy_refresh.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:github_client_app/common/funs.dart';
 import 'package:github_client_app/common/logger.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/routes/demo/list/models/demo_list_item.dart';
-import 'package:github_client_app/routes/demo/list/states/demo_list_view_model.dart';
+import 'package:github_client_app/routes/demo/list/states/demo_list_controller.dart';
+import 'package:github_client_app/routes/demo/list/states/demo_list_state.dart';
 import 'package:github_client_app/routes/demo/list/widgets/demo_list_empty_item.dart';
 import 'package:github_client_app/routes/demo/list/widgets/demo_list_error_item.dart';
 import 'package:github_client_app/routes/demo/list/widgets/demo_list_loading_item.dart';
 import 'package:github_client_app/routes/demo/list/widgets/demo_list_meta_item.dart';
 import 'package:github_client_app/routes/demo/list/widgets/demo_list_title_item.dart';
-import 'package:provider/provider.dart';
 
 final _log = createLogger('[DemoListRoute]');
 
-/// 多类型列表 Demo 页面，负责创建页面级状态并触发首次加载。
-class DemoListRoute extends StatefulWidget {
+/// 多类型列表 Demo 页面，负责触发首次加载并消费页面级 Riverpod 状态。
+class DemoListRoute extends ConsumerStatefulWidget {
   const DemoListRoute({
     super.key,
-    this.viewModelBuilder,
   });
 
-  /// 页面级视图模型构造器。
-  ///
-  /// 仅用于测试注入场景；默认由页面内部创建 [DemoListViewModel]。
-  final DemoListViewModel Function()? viewModelBuilder;
-
   @override
-  State<DemoListRoute> createState() => _DemoListRouteState();
+  ConsumerState<DemoListRoute> createState() => _DemoListRouteState();
 }
 
-class _DemoListRouteState extends State<DemoListRoute> {
-  /// 页面级视图模型实例。
-  late final DemoListViewModel _viewModel;
-
+class _DemoListRouteState extends ConsumerState<DemoListRoute> {
   @override
   void initState() {
     super.initState();
-    _viewModel = widget.viewModelBuilder?.call() ?? DemoListViewModel();
     _scheduleInitialLoad();
   }
 
@@ -51,83 +43,105 @@ class _DemoListRouteState extends State<DemoListRoute> {
       }
 
       _log.d('页面进入，触发首次数据加载');
-      _viewModel.loadInitialData();
+      ref.read(demoListControllerProvider.notifier).loadInitialData();
     });
   }
 
   @override
-  void dispose() {
-    _viewModel.dispose();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _viewModel,
-      child: const _DemoListView(),
-    );
+    return const _DemoListView();
   }
 }
 
-/// 多类型列表视图，根据 ViewModel 状态渲染内容或状态页。
-class _DemoListView extends StatelessWidget {
+/// 多类型列表视图，根据 Riverpod 状态快照渲染内容或状态页。
+class _DemoListView extends ConsumerWidget {
   const _DemoListView();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final DemoListState state = ref.watch(demoListControllerProvider);
+    final List<DemoListItem> items = state.items;
+    final bool shouldShowStateOnly = state.isStateOnly;
+    final l10n = AppLocalizations.of(context);
+    final controller = ref.read(demoListControllerProvider.notifier);
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context).demoList),
       ),
-      body: Consumer<DemoListViewModel>(
-        builder: (context, viewModel, child) {
-          final items = viewModel.items;
-
-          if (viewModel.isStateOnly) {
-            // 首次加载中、空态、错误态等状态页不需要下拉刷新和上拉加载。
-            final item = items.single;
-            if (item is! DemoListStateItemData) {
-              // 防御性代码
-              final message = 'DemoListRoute state-only 分支期望 '
-                  'DemoListStateItemData，'
-                  '实际类型: ${item.runtimeType}';
-              _log.e(message);
-              throw StateError(message);
-            }
-            // CustomScrollView+SliverFillRemaining 实现占满全屏
-            return CustomScrollView(
-              slivers: [
-                SliverFillRemaining(
-                  hasScrollBody: false,
-                  child: _buildStateItem(context, item),
-                ),
-              ],
-            );
-          }
-
-          return EasyRefresh.builder(
-            onRefresh: viewModel.refreshData,
-            onLoad: viewModel.hasMore ? viewModel.loadMoreData : null,
-            footer: BuilderFooter(
-              triggerOffset: 70,
-              clamping: false,
-              processedDuration: Duration.zero,
-              infiniteOffset: 70,
-              builder: _buildLoadMoreFooter,
+      body: shouldShowStateOnly
+          ? _buildStateOnly(
+              context,
+              items,
+              onRefresh: controller.refreshData,
+              onRetry: controller.retry,
+            )
+          : EasyRefresh.builder(
+              onRefresh: controller.refreshData,
+              onLoad: state.hasMore
+                  ? () async {
+                      final DemoListLoadMoreOutcome outcome =
+                          await controller.loadMoreData();
+                      if (!context.mounted) {
+                        return;
+                      }
+                      if (outcome == DemoListLoadMoreOutcome.failed) {
+                        showToast(l10n.demoListLoadFailed);
+                      }
+                    }
+                  : null,
+              footer: BuilderFooter(
+                triggerOffset: 70,
+                clamping: false,
+                processedDuration: Duration.zero,
+                infiniteOffset: 70,
+                builder: _buildLoadMoreFooter,
+              ),
+              childBuilder: (context, physics) {
+                return ListView.builder(
+                  physics: physics,
+                  itemCount: items.length,
+                  itemBuilder: (context, index) {
+                    return _buildRepoItem(context, items[index]);
+                  },
+                );
+              },
             ),
-            childBuilder: (context, physics) {
-              return ListView.builder(
-                physics: physics,
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  return _buildRepoItem(context, items[index]);
-                },
-              );
-            },
-          );
-        },
-      ),
+    );
+  }
+
+  /// 构建仅展示单个状态条目的状态页布局。
+  ///
+  /// [context] 表示当前构建上下文。
+  /// [items] 表示页面当前展示条目集合，期望只包含单个状态条目。
+  ///
+  /// 当状态页分支未拿到合法的状态条目时，会记录错误日志并抛出 [StateError]。
+  Widget _buildStateOnly(
+    BuildContext context,
+    List<DemoListItem> items, {
+    required Future<void> Function({String? username}) onRefresh,
+    required Future<void> Function({String? username}) onRetry,
+  }) {
+    final DemoListItem item = items.single;
+    if (item is! DemoListStateItemData) {
+      final message = 'DemoListRoute state-only 分支期望 DemoListStateItemData，'
+          '实际类型: ${item.runtimeType}';
+      _log.e(message);
+      throw StateError(message);
+    }
+
+    return CustomScrollView(
+      slivers: [
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: _buildStateItem(
+            context,
+            item,
+            onRefresh: onRefresh,
+            onRetry: onRetry,
+          ),
+        ),
+      ],
     );
   }
 
@@ -145,7 +159,7 @@ class _DemoListView extends StatelessWidget {
         return DemoListMetaItem(repo: repo);
       case DemoListStateItemData():
         final message = '_buildRepoItem 仅支持 DemoListTitleItemData 与 '
-            'DemoListMetaItemData，实际收到: ${item.runtimeType}';
+            'DemoListMetaItemData，实际收到: ${item.runtimeType} stateType:${item.stateType}';
         _log.e(message);
         throw StateError(message);
     }
@@ -179,8 +193,12 @@ class _DemoListView extends StatelessWidget {
   }
 
   /// 构建 loading、empty、error 三种状态页。
-  Widget _buildStateItem(BuildContext context, DemoListStateItemData item) {
-    final viewModel = context.read<DemoListViewModel>();
+  Widget _buildStateItem(
+    BuildContext context,
+    DemoListStateItemData item, {
+    required Future<void> Function({String? username}) onRefresh,
+    required Future<void> Function({String? username}) onRetry,
+  }) {
     final l10n = AppLocalizations.of(context);
     switch (item.stateType) {
       case DemoListStateType.loading:
@@ -195,14 +213,14 @@ class _DemoListView extends StatelessWidget {
           message: item.message?.isNotEmpty == true
               ? item.message!
               : l10n.demoListEmpty,
-          onRefresh: viewModel.refreshData,
+          onRefresh: onRefresh,
         );
       case DemoListStateType.error:
         return DemoListErrorItem(
           message: item.message?.isNotEmpty == true
               ? item.message!
               : l10n.demoListLoadFailed,
-          onRetry: viewModel.retry,
+          onRetry: onRetry,
         );
     }
   }
