@@ -49,6 +49,7 @@ dependencies:
   easy_refresh: ^3.4.0
   provider: ^6.0.5
   flutter_riverpod: 2.6.1
+  shared_preferences: ^2.1.1
 
 
 
@@ -68,8 +69,6 @@ dev_dependencies:
   json_serializable: ^6.6.0
   build_runner: ^2.3.3
   json_model: ^1.0.0
-  # https://pub.dev/packages/shared_preferences/install
-  shared_preferences: ^2.1.1
   flukit: ^3.0.1
   # https://pub.dev/packages/cached_network_image
   cached_network_image: ^3.2.3

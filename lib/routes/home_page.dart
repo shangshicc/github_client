@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
-    show ConsumerState, ConsumerStatefulWidget;
+    show Consumer, ConsumerState, ConsumerStatefulWidget, WidgetRef;
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/common/funs.dart';
 import 'package:github_client_app/common/git_api.dart';
@@ -9,10 +9,11 @@ import 'package:github_client_app/models/index.dart';
 import 'package:github_client_app/routes/detail_page.dart';
 import 'package:github_client_app/routes/selector_page.dart';
 import 'package:github_client_app/states/riverpod/counter_provider.dart';
-import 'package:provider/provider.dart' as provider_pkg;
-
-import '../states/profile_change_notifier.dart';
+import 'package:github_client_app/states/profile_state.dart';
 import '../widgets/repo_item.dart';
+import '../common/logger.dart';
+
+final _log = createLogger('HomeRoute');
 
 class HomeRoute extends ConsumerStatefulWidget {
   const HomeRoute({Key? key}) : super(key: key);
@@ -58,8 +59,9 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
 
   Widget _buildBody() {
     final l10n = AppLocalizations.of(context);
-    final UserModel userModel = provider_pkg.Provider.of<UserModel>(context);
-    if (!userModel.isLogin) {
+    final bool login = ref.watch(isLoginProvider);
+    final User? currentUser = ref.watch(userProvider);
+    if (!login) {
       return Center(
         child: ElevatedButton(
           child: Text(l10n.login),
@@ -73,7 +75,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
           if (_items[index].name == loadingTag) {
             if (hasMore) {
               // 获取数据
-              _retrieveDate(userModel.user?.login ?? "_retriieveDate login");
+              _retrieveDate(currentUser?.login ?? "_retriieveDate login");
               // 加载时显示loading
               return Container(
                 padding: const EdgeInsets.all(16.0),
@@ -154,12 +156,19 @@ class MyDrawer extends StatelessWidget {
   }
 
   Widget _buildHeader() {
-    return provider_pkg.Consumer<UserModel>(
-      builder: (BuildContext context, UserModel value, Widget? child) {
+    return Consumer(
+      builder: (BuildContext context, WidgetRef ref, Widget? child) {
         final l10n = AppLocalizations.of(context);
+        final bool login = ref.watch(isLoginProvider);
+        final User? user = ref.watch(userProvider);
+        final MaterialColor themeColor = ref.watch(themeProvider);
+        _log.i(
+          'Drawer header build, login=$login, user=${user?.login ?? "null"}, '
+          'providerTheme=${themeColor.toARGB32()}',
+        );
         return GestureDetector(
           child: Container(
-            color: Theme.of(context).primaryColor,
+            color: themeColor,
             padding: const EdgeInsets.only(top: 40, bottom: 20),
             child: Row(
               children: [
@@ -167,8 +176,8 @@ class MyDrawer extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: ClipOval(
                     // 如果已登录，则显示用户头像；若未登录，则显示默认头像
-                    child: value.isLogin
-                        ? gmAvatar(value.user?.avatar_url ?? "", width: 80)
+                    child: login
+                        ? gmAvatar(user?.avatar_url ?? "", width: 80)
                         : Image.asset(
                             "imgs/avatar-default.png",
                             width: 80,
@@ -176,7 +185,7 @@ class MyDrawer extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  value.isLogin ? value.user?.login ?? "isLogined" : l10n.login,
+                  login ? user?.login ?? "isLogined" : l10n.login,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -186,7 +195,7 @@ class MyDrawer extends StatelessWidget {
             ),
           ),
           onTap: () {
-            if (!value.isLogin) {
+            if (!login) {
               Navigator.of(context).pushNamed("login");
             }
           },
@@ -196,8 +205,9 @@ class MyDrawer extends StatelessWidget {
   }
 
   Widget _buildMenus() {
-    return provider_pkg.Consumer<UserModel>(
-        builder: (BuildContext context, UserModel value, Widget? child) {
+    return Consumer(
+        builder: (BuildContext context, WidgetRef ref, Widget? child) {
+      final bool login = ref.watch(isLoginProvider);
       final l10n = AppLocalizations.of(context);
       return ListView(
         children: [
@@ -216,7 +226,7 @@ class MyDrawer extends StatelessWidget {
             title: Text(l10n.demo),
             onTap: () => Navigator.pushNamed(context, "demo"),
           ),
-          if (value.isLogin)
+          if (login)
             ListTile(
                 leading: const Icon(Icons.power_settings_new),
                 title: Text(l10n.logout),
@@ -233,7 +243,9 @@ class MyDrawer extends StatelessWidget {
                             TextButton(
                                 onPressed: () {
                                   // 该赋值语法会重新触发MaterialApp rebuild
-                                  value.user = null;
+                                  ref
+                                      .read(profileProvider.notifier)
+                                      .updateUser(null);
                                   Navigator.pop(context);
                                 },
                                 child: Text(l10n.yes))

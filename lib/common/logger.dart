@@ -23,7 +23,7 @@ Logger createLogger([String? name]) {
         methodCount: 0,
         errorMethodCount: 8,
         lineLength: 120,
-        colors: true,
+        colors: false,
         printEmojis: false,
         dateTimeFormat: DateTimeFormat.onlyTimeAndSinceStart,
       ),

@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
-import 'package:github_client_app/states/profile_change_notifier.dart';
-import 'package:provider/provider.dart';
+import 'package:github_client_app/states/profile_state.dart';
 import '../common/global.dart';
+import '../common/logger.dart';
 
-class ThemeChangeRoute extends StatelessWidget {
+final _log = createLogger('ThemeChangeRoute');
+
+class ThemeChangeRoute extends ConsumerWidget {
   const ThemeChangeRoute({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
@@ -25,7 +28,8 @@ class ThemeChangeRoute extends StatelessWidget {
               ),
             ),
             onTap: () {
-              Provider.of<ThemeModel>(context, listen: false).theme = e;
+              _log.i('Theme selected, swatch=${e.toARGB32()}');
+              ref.read(profileProvider.notifier).updateTheme(e);
             },
           );
         }).toList(),
