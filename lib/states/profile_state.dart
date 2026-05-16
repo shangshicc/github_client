@@ -1,10 +1,12 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:github_client_app/common/global.dart';
 import 'package:github_client_app/common/logger.dart';
 import 'package:github_client_app/models/index.dart' as models;
+
+import 'profile_utils.dart';
+
+export 'profile_selectors.dart';
 
 part 'profile_state.g.dart';
 
@@ -40,8 +42,8 @@ class Profile extends _$Profile {
       'updateUser requested, hasUser=${user != null}, '
       'currentTheme=${state.theme}, currentLocale=${state.locale ?? "system"}',
     );
-    final models.Profile previous = _cloneProfile(state);
-    final models.Profile next = _cloneProfile(state);
+    final models.Profile previous = cloneProfile(state);
+    final models.Profile next = cloneProfile(state);
     final String? previousLogin = previous.user?.login;
     next.lastLogin = previousLogin;
     next.user = user;
@@ -82,8 +84,8 @@ class Profile extends _$Profile {
       _log.i('updateTheme skipped because selected theme is unchanged');
       return;
     }
-    final models.Profile previous = _cloneProfile(state);
-    final models.Profile next = _cloneProfile(state);
+    final models.Profile previous = cloneProfile(state);
+    final models.Profile next = cloneProfile(state);
     next.theme = color.toARGB32();
     _log.i(
       'updateTheme committed, theme=${next.theme}, hasUser=${next.user != null}',
@@ -124,8 +126,8 @@ class Profile extends _$Profile {
       _log.i('updateLocale skipped because selected locale is unchanged');
       return;
     }
-    final models.Profile previous = _cloneProfile(state);
-    final models.Profile next = _cloneProfile(state);
+    final models.Profile previous = cloneProfile(state);
+    final models.Profile next = cloneProfile(state);
     next.locale = locale;
     _log.i(
       'updateLocale committed, locale=${next.locale ?? "system"}, '
@@ -168,97 +170,4 @@ class Profile extends _$Profile {
     Global.profile = previous;
     state = previous;
   }
-}
-
-/// 提供当前登录用户信息。
-@riverpod
-models.User? user(Ref ref) {
-  return ref.watch(profileProvider).user;
-}
-
-/// 提供当前登录状态。
-@riverpod
-bool isLogin(Ref ref) {
-  return ref.watch(userProvider) != null;
-}
-
-/// 提供当前主题色。
-@riverpod
-MaterialColor theme(Ref ref) {
-  final models.Profile profile = ref.watch(profileProvider);
-  final MaterialColor theme = Global.themes.firstWhere(
-    (MaterialColor e) => e.toARGB32() == profile.theme,
-    orElse: () => Colors.blue,
-  );
-  _log.i(
-    'themeProvider resolved, profileTheme=${profile.theme}, '
-    'resolvedTheme=${theme.toARGB32()}, hasUser=${profile.user != null}',
-  );
-  return theme;
-}
-
-/// 提供当前语言标识。
-@riverpod
-String? localeCode(Ref ref) {
-  return _normalizeLocaleCode(ref.watch(profileProvider).locale);
-}
-
-/// 提供当前 Locale 对象。
-@riverpod
-Locale? locale(Ref ref) {
-  return _toLocale(ref.watch(profileProvider).locale);
-}
-
-/// 规范化历史存储的 locale 字符串，保持 UI 读取兼容。
-///
-/// [locale] 表示存储在 Profile 中的语言标识。
-String? _normalizeLocaleCode(String? locale) {
-  if (locale == null || locale.isEmpty) return null;
-  if (locale == 'en_US') return 'en';
-  if (locale == 'zh_CN') return 'zh';
-  return locale;
-}
-
-/// 将 Profile 中的语言字符串转换为 Flutter Locale。
-///
-/// [locale] 表示存储在 Profile 中的语言标识。
-Locale? _toLocale(String? locale) {
-  if (locale == null || locale.isEmpty) return null;
-
-  if (locale == 'en_US') return const Locale('en');
-  if (locale == 'zh_CN') return const Locale('zh');
-
-  final String normalized = locale.replaceAll('-', '_');
-  final List<String> parts = normalized.split('_');
-  if (parts.isEmpty || parts.first.isEmpty) return null;
-  if (parts.length == 1) return Locale(parts[0]);
-  if (parts.length == 2) return Locale(parts[0], parts[1]);
-
-  return Locale.fromSubtags(
-    languageCode: parts[0],
-    scriptCode: parts[1],
-    countryCode: parts[2],
-  );
-}
-
-/// 深拷贝 Profile，避免在 Riverpod 状态流转中复用可变对象。
-///
-/// [source] 表示需要复制的 Profile 对象。
-models.Profile _cloneProfile(models.Profile source) {
-  final Map<String, dynamic> json =
-      jsonDecode(jsonEncode(source.toJson())) as Map<String, dynamic>;
-
-  return models.Profile()
-    ..user =
-        json['user'] == null
-            ? null
-            : models.User.fromJson(json['user'] as Map<String, dynamic>)
-    ..token = json['token'] as String?
-    ..theme = json['theme'] as num
-    ..cache =
-        json['cache'] == null
-            ? null
-            : models.CacheConfig.fromJson(json['cache'] as Map<String, dynamic>)
-    ..lastLogin = json['lastLogin'] as String?
-    ..locale = json['locale'] as String?;
 }

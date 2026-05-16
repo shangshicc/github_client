@@ -4,23 +4,16 @@ import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:github_client_app/common/global.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/models/repo.dart';
 import 'package:github_client_app/models/user.dart';
 import 'package:github_client_app/routes/demo/list/data/demo_list_repository.dart';
 import 'package:github_client_app/routes/demo/list/demo_list_route.dart';
 import 'package:github_client_app/routes/demo/list/states/demo_list_controller.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:github_client_app/states/profile_state.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  setUp(() async {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
-    await Global.init();
-    Global.profile.theme = Colors.blue.toARGB32();
-  });
 
   testWidgets('DemoListRoute 首帧会自动触发首次加载并展示错误态', (WidgetTester tester) async {
     final _FakeDemoListRepository repository = _FakeDemoListRepository(
@@ -31,7 +24,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [demoListRepositoryProvider.overrideWithValue(repository)],
+        overrides: [
+          demoListRepositoryProvider.overrideWithValue(repository),
+          themeProvider.overrideWithValue(Colors.blue),
+        ],
         child: const _TestApp(child: DemoListRoute()),
       ),
     );
@@ -58,7 +54,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [demoListRepositoryProvider.overrideWithValue(repository)],
+        overrides: [
+          demoListRepositoryProvider.overrideWithValue(repository),
+          themeProvider.overrideWithValue(Colors.blue),
+        ],
         child: const _TestApp(child: DemoListRoute()),
       ),
     );
