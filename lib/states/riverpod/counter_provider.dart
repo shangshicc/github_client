@@ -1,10 +1,13 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'counter_provider.g.dart';
 
 /// Counter 的 Riverpod 状态控制器。
 ///
 /// 该控制器用于承载功能2中的最小叶子状态迁移样板，
 /// 当前只负责维护一个简单的整数计数并提供递增能力。
-class CounterNotifier extends Notifier<int> {
+@Riverpod(keepAlive: true)
+class Counter extends _$Counter {
   /// 构建计数器初始值。
   ///
   /// 返回值：初始计数值 `0`。
@@ -18,7 +21,3 @@ class CounterNotifier extends Notifier<int> {
     state = state + 1;
   }
 }
-
-/// Counter 的 Riverpod Provider。
-final NotifierProvider<CounterNotifier, int> counterProvider =
-    NotifierProvider<CounterNotifier, int>(CounterNotifier.new);

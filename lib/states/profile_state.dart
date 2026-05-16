@@ -1,10 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:github_client_app/common/global.dart';
 import 'package:github_client_app/common/logger.dart';
-import 'package:github_client_app/models/index.dart';
+import 'package:github_client_app/models/index.dart' as models;
+
+part 'profile_state.g.dart';
 
 final _log = createLogger('ProfileState');
 
@@ -12,14 +14,15 @@ final _log = createLogger('ProfileState');
 ///
 /// 该控制器把 Global.profile 作为唯一真源，并把用户、主题、语言变更
 /// 转换成显式状态更新与显式持久化。
-class ProfileNotifier extends Notifier<Profile> {
+@Riverpod(keepAlive: true)
+class Profile extends _$Profile {
   /// 构建当前 Profile 的 Riverpod 初始状态。
   ///
   /// 初始状态直接读取 [Global.profile]，确保应用启动后的全局状态与本地
   /// 持久化数据保持一致。
   @override
-  Profile build() {
-    final Profile initial = Global.profile;
+  models.Profile build() {
+    final models.Profile initial = Global.profile;
     _log.i(
       'ProfileNotifier initialized, hasUser=${initial.user != null}, '
       'theme=${initial.theme}, locale=${initial.locale ?? "system"}',
@@ -32,13 +35,13 @@ class ProfileNotifier extends Notifier<Profile> {
   /// [user] 表示新的登录用户；传入 `null` 时表示退出登录。
   ///
   /// 方法会记录上一次登录名、替换当前用户，并显式触发本地持久化。
-  Future<void> updateUser(User? user) async {
+  Future<void> updateUser(models.User? user) async {
     _log.i(
       'updateUser requested, hasUser=${user != null}, '
       'currentTheme=${state.theme}, currentLocale=${state.locale ?? "system"}',
     );
-    final Profile previous = _cloneProfile(state);
-    final Profile next = _cloneProfile(state);
+    final models.Profile previous = _cloneProfile(state);
+    final models.Profile next = _cloneProfile(state);
     final String? previousLogin = previous.user?.login;
     next.lastLogin = previousLogin;
     next.user = user;
@@ -79,8 +82,8 @@ class ProfileNotifier extends Notifier<Profile> {
       _log.i('updateTheme skipped because selected theme is unchanged');
       return;
     }
-    final Profile previous = _cloneProfile(state);
-    final Profile next = _cloneProfile(state);
+    final models.Profile previous = _cloneProfile(state);
+    final models.Profile next = _cloneProfile(state);
     next.theme = color.toARGB32();
     _log.i(
       'updateTheme committed, theme=${next.theme}, hasUser=${next.user != null}',
@@ -121,8 +124,8 @@ class ProfileNotifier extends Notifier<Profile> {
       _log.i('updateLocale skipped because selected locale is unchanged');
       return;
     }
-    final Profile previous = _cloneProfile(state);
-    final Profile next = _cloneProfile(state);
+    final models.Profile previous = _cloneProfile(state);
+    final models.Profile next = _cloneProfile(state);
     next.locale = locale;
     _log.i(
       'updateLocale committed, locale=${next.locale ?? "system"}, '
@@ -151,7 +154,7 @@ class ProfileNotifier extends Notifier<Profile> {
   /// [next] 表示更新后的完整 Profile 对象。
   ///
   /// 该方法会同时更新 [Global.profile] 和当前状态，保证全局单例与 UI 监听源一致。
-  void _commit(Profile next) {
+  void _commit(models.Profile next) {
     Global.profile = next;
     state = next;
   }
@@ -161,29 +164,28 @@ class ProfileNotifier extends Notifier<Profile> {
   /// [previous] 表示更新前的 Profile 快照。
   ///
   /// 该方法只在持久化失败时使用，用于恢复内存状态与全局单例。
-  void _rollback(Profile previous) {
+  void _rollback(models.Profile previous) {
     Global.profile = previous;
     state = previous;
   }
 }
 
-/// 提供全局 Profile 的 Riverpod 状态入口。
-final NotifierProvider<ProfileNotifier, Profile> profileProvider =
-    NotifierProvider<ProfileNotifier, Profile>(ProfileNotifier.new);
-
 /// 提供当前登录用户信息。
-final Provider<User?> userProvider = Provider<User?>(
-  (ref) => ref.watch(profileProvider).user,
-);
+@riverpod
+models.User? user(Ref ref) {
+  return ref.watch(profileProvider).user;
+}
 
 /// 提供当前登录状态。
-final Provider<bool> isLoginProvider = Provider<bool>(
-  (ref) => ref.watch(userProvider) != null,
-);
+@riverpod
+bool isLogin(Ref ref) {
+  return ref.watch(userProvider) != null;
+}
 
 /// 提供当前主题色。
-final Provider<MaterialColor> themeProvider = Provider<MaterialColor>((ref) {
-  final Profile profile = ref.watch(profileProvider);
+@riverpod
+MaterialColor theme(Ref ref) {
+  final models.Profile profile = ref.watch(profileProvider);
   final MaterialColor theme = Global.themes.firstWhere(
     (MaterialColor e) => e.toARGB32() == profile.theme,
     orElse: () => Colors.blue,
@@ -193,17 +195,19 @@ final Provider<MaterialColor> themeProvider = Provider<MaterialColor>((ref) {
     'resolvedTheme=${theme.toARGB32()}, hasUser=${profile.user != null}',
   );
   return theme;
-});
+}
 
 /// 提供当前语言标识。
-final Provider<String?> localeCodeProvider = Provider<String?>(
-  (ref) => _normalizeLocaleCode(ref.watch(profileProvider).locale),
-);
+@riverpod
+String? localeCode(Ref ref) {
+  return _normalizeLocaleCode(ref.watch(profileProvider).locale);
+}
 
 /// 提供当前 Locale 对象。
-final Provider<Locale?> localeProvider = Provider<Locale?>(
-  (ref) => _toLocale(ref.watch(profileProvider).locale),
-);
+@riverpod
+Locale? locale(Ref ref) {
+  return _toLocale(ref.watch(profileProvider).locale);
+}
 
 /// 规范化历史存储的 locale 字符串，保持 UI 读取兼容。
 ///
@@ -240,21 +244,21 @@ Locale? _toLocale(String? locale) {
 /// 深拷贝 Profile，避免在 Riverpod 状态流转中复用可变对象。
 ///
 /// [source] 表示需要复制的 Profile 对象。
-Profile _cloneProfile(Profile source) {
+models.Profile _cloneProfile(models.Profile source) {
   final Map<String, dynamic> json =
       jsonDecode(jsonEncode(source.toJson())) as Map<String, dynamic>;
 
-  return Profile()
+  return models.Profile()
     ..user =
         json['user'] == null
             ? null
-            : User.fromJson(json['user'] as Map<String, dynamic>)
+            : models.User.fromJson(json['user'] as Map<String, dynamic>)
     ..token = json['token'] as String?
     ..theme = json['theme'] as num
     ..cache =
         json['cache'] == null
             ? null
-            : CacheConfig.fromJson(json['cache'] as Map<String, dynamic>)
+            : models.CacheConfig.fromJson(json['cache'] as Map<String, dynamic>)
     ..lastLogin = json['lastLogin'] as String?
     ..locale = json['locale'] as String?;
 }

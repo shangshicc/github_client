@@ -1,8 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:github_client_app/common/logger.dart';
 import 'package:github_client_app/models/index.dart';
 import 'package:github_client_app/routes/demo/list/data/demo_list_repository.dart';
 import 'package:github_client_app/routes/demo/list/states/demo_list_state.dart';
+
+part 'demo_list_controller.g.dart';
 
 final _log = createLogger('[DemoListController]');
 
@@ -11,13 +14,6 @@ final Provider<DemoListRepository> demoListRepositoryProvider =
     Provider<DemoListRepository>((Ref ref) {
       return DemoListRepository();
     });
-
-/// DemoList 页面控制器 Provider。
-final NotifierProvider<DemoListController, DemoListState>
-demoListControllerProvider =
-    NotifierProvider.autoDispose<DemoListController, DemoListState>(
-      DemoListController.new,
-    );
 
 /// Demo 列表加载更多结果。
 enum DemoListLoadMoreOutcome {
@@ -34,7 +30,8 @@ enum DemoListLoadMoreOutcome {
 /// Demo 列表页面控制器。
 ///
 /// 负责维护分页流程、错误恢复以及主结果态 / 加载更多交互态写入。
-class DemoListController extends Notifier<DemoListState> {
+@Riverpod(keepAlive: false)
+class DemoListController extends _$DemoListController {
   /// 单次请求数量。
   static const int pageSize = 5;
 

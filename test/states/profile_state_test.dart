@@ -5,7 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:github_client_app/common/global.dart';
-import 'package:github_client_app/models/index.dart';
+import 'package:github_client_app/models/index.dart' as models;
 import 'package:github_client_app/states/profile_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
@@ -17,22 +17,22 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await Global.init();
-    Global.profile = Profile()..theme = Global.themes.first.toARGB32();
+    Global.profile = models.Profile()..theme = Global.themes.first.toARGB32();
   });
 
   test('updateUser 在 user 与 cache 为空时不应因克隆 Profile 崩溃', () async {
     final ProviderContainer container = ProviderContainer();
     addTearDown(container.dispose);
 
-    final ProfileNotifier notifier = container.read(profileProvider.notifier);
-    final User user =
-        User()
+    final Profile notifier = container.read(profileProvider.notifier);
+    final models.User user =
+        models.User()
           ..login = 'tester'
           ..id = 1;
 
     await expectLater(notifier.updateUser(user), completes);
 
-    final Profile profile = container.read(profileProvider);
+    final models.Profile profile = container.read(profileProvider);
     expect(profile.user?.login, 'tester');
     expect(profile.lastLogin, isNull);
   });
@@ -41,11 +41,11 @@ void main() {
     final ProviderContainer container = ProviderContainer();
     addTearDown(container.dispose);
 
-    final ProfileNotifier notifier = container.read(profileProvider.notifier);
+    final Profile notifier = container.read(profileProvider.notifier);
 
     await expectLater(notifier.updateTheme(Colors.red), completes);
 
-    final Profile profile = container.read(profileProvider);
+    final models.Profile profile = container.read(profileProvider);
     expect(profile.theme, Colors.red.toARGB32());
     expect(Global.profile.theme, Colors.red.toARGB32());
 
@@ -62,11 +62,11 @@ void main() {
     final ProviderContainer container = ProviderContainer();
     addTearDown(container.dispose);
 
-    final ProfileNotifier notifier = container.read(profileProvider.notifier);
+    final Profile notifier = container.read(profileProvider.notifier);
 
     await expectLater(notifier.updateLocale('en'), completes);
 
-    final Profile profile = container.read(profileProvider);
+    final models.Profile profile = container.read(profileProvider);
     expect(profile.locale, 'en');
     expect(Global.profile.locale, 'en');
     expect(container.read(localeCodeProvider), 'en');
@@ -83,7 +83,7 @@ void main() {
 
   test('localeProvider 会兼容历史 locale 存储值', () {
     Global.profile =
-        Profile()
+        models.Profile()
           ..theme = Global.themes.first.toARGB32()
           ..locale = 'en_US';
 
@@ -96,18 +96,18 @@ void main() {
 
   test('updateLocale 传入 null 时会回退为跟随系统语言并持久化', () async {
     Global.profile =
-        Profile()
+        models.Profile()
           ..theme = Global.themes.first.toARGB32()
           ..locale = 'zh';
 
     final ProviderContainer container = ProviderContainer();
     addTearDown(container.dispose);
 
-    final ProfileNotifier notifier = container.read(profileProvider.notifier);
+    final Profile notifier = container.read(profileProvider.notifier);
 
     await expectLater(notifier.updateLocale(null), completes);
 
-    final Profile profile = container.read(profileProvider);
+    final models.Profile profile = container.read(profileProvider);
     expect(profile.locale, isNull);
     expect(Global.profile.locale, isNull);
     expect(container.read(localeCodeProvider), isNull);
@@ -133,7 +133,7 @@ void main() {
     final ProviderContainer container = ProviderContainer();
     addTearDown(container.dispose);
 
-    final ProfileNotifier notifier = container.read(profileProvider.notifier);
+    final Profile notifier = container.read(profileProvider.notifier);
     final int previousTheme = container.read(profileProvider).theme.toInt();
 
     await expectLater(
@@ -147,7 +147,7 @@ void main() {
 
   test('updateLocale 持久化失败时会回滚内存状态与 Global.profile', () async {
     Global.profile =
-        Profile()
+        models.Profile()
           ..theme = Global.themes.first.toARGB32()
           ..locale = 'zh';
 
@@ -161,7 +161,7 @@ void main() {
     final ProviderContainer container = ProviderContainer();
     addTearDown(container.dispose);
 
-    final ProfileNotifier notifier = container.read(profileProvider.notifier);
+    final Profile notifier = container.read(profileProvider.notifier);
 
     await expectLater(
       notifier.updateLocale('en'),
@@ -175,23 +175,23 @@ void main() {
 
   test('主题与语言持久化后重新初始化仍可恢复', () async {
     Global.profile =
-        Profile()
+        models.Profile()
           ..theme = Global.themes.first.toARGB32()
           ..locale = 'zh'
           ..cache =
-              (CacheConfig()
+              (models.CacheConfig()
                 ..enable = true
                 ..maxAge = 3600
                 ..maxCount = 100)
           ..user =
-              (User()
+              (models.User()
                 ..login = 'restored-user'
                 ..id = 9527);
 
     final ProviderContainer container = ProviderContainer();
     addTearDown(container.dispose);
 
-    final ProfileNotifier notifier = container.read(profileProvider.notifier);
+    final Profile notifier = container.read(profileProvider.notifier);
     await notifier.updateTheme(Colors.red);
     await notifier.updateLocale('en');
 

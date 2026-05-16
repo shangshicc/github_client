@@ -1,13 +1,16 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:github_client_app/common/logger.dart';
 import 'package:github_client_app/states/riverpod/selector_state.dart';
+
+part 'selector_notifier.g.dart';
 
 final _selectorNotifierLogger = createLogger('SelectorNotifier');
 
 /// Selector 页面状态控制器。
 ///
 /// 该控制器负责初始化商品列表，并在点击时切换指定商品的收藏状态。
-class SelectorNotifier extends Notifier<SelectorState> {
+@riverpod
+class Selector extends _$Selector {
   /// 构建 Selector 页面初始状态。
   ///
   /// 返回值：包含 10 条初始商品数据的页面状态对象。
@@ -44,9 +47,3 @@ class SelectorNotifier extends Notifier<SelectorState> {
     );
   }
 }
-
-/// Selector 页面的 Riverpod Provider。
-final NotifierProvider<SelectorNotifier, SelectorState> selectorProvider =
-    NotifierProvider.autoDispose<SelectorNotifier, SelectorState>(
-      SelectorNotifier.new,
-    );
