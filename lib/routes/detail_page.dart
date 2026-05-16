@@ -16,7 +16,7 @@ class DetailPage extends ConsumerWidget {
   void _incrementCounter(WidgetRef ref) {
     final int currentCounter = ref.read(counterProvider);
     _detailPageLogger.i('点击详情页计数按钮，currentCounter=$currentCounter');
-    ref.read(counterProvider.notifier).update((int state) => state + 1);
+    ref.read(counterProvider.notifier).increment();
     final int nextCounter = ref.read(counterProvider);
     _detailPageLogger.i('详情页计数更新完成，nextCounter=$nextCounter');
   }
@@ -24,9 +24,7 @@ class DetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('detail page'),
-      ),
+      appBar: AppBar(title: const Text('detail page')),
       body: Center(
         child: ElevatedButton(
           onPressed: () => _incrementCounter(ref),

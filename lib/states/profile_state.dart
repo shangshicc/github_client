@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:github_client_app/common/global.dart';
 import 'package:github_client_app/common/logger.dart';
 import 'package:github_client_app/models/index.dart';
@@ -13,16 +12,19 @@ final _log = createLogger('ProfileState');
 ///
 /// 该控制器把 Global.profile 作为唯一真源，并把用户、主题、语言变更
 /// 转换成显式状态更新与显式持久化。
-class ProfileNotifier extends StateNotifier<Profile> {
-  /// 构建当前 Profile 的 Riverpod 控制器。
+class ProfileNotifier extends Notifier<Profile> {
+  /// 构建当前 Profile 的 Riverpod 初始状态。
   ///
   /// 初始状态直接读取 [Global.profile]，确保应用启动后的全局状态与本地
   /// 持久化数据保持一致。
-  ProfileNotifier() : super(Global.profile) {
+  @override
+  Profile build() {
+    final Profile initial = Global.profile;
     _log.i(
-      'ProfileNotifier initialized, hasUser=${state.user != null}, '
-      'theme=${state.theme}, locale=${state.locale ?? "system"}',
+      'ProfileNotifier initialized, hasUser=${initial.user != null}, '
+      'theme=${initial.theme}, locale=${initial.locale ?? "system"}',
     );
+    return initial;
   }
 
   /// 更新登录用户并同步保存 Profile。
@@ -166,8 +168,8 @@ class ProfileNotifier extends StateNotifier<Profile> {
 }
 
 /// 提供全局 Profile 的 Riverpod 状态入口。
-final StateNotifierProvider<ProfileNotifier, Profile> profileProvider =
-    StateNotifierProvider<ProfileNotifier, Profile>((ref) => ProfileNotifier());
+final NotifierProvider<ProfileNotifier, Profile> profileProvider =
+    NotifierProvider<ProfileNotifier, Profile>(ProfileNotifier.new);
 
 /// 提供当前登录用户信息。
 final Provider<User?> userProvider = Provider<User?>(
