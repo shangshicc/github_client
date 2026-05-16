@@ -9,15 +9,15 @@ final _log = createLogger('[DemoListController]');
 /// DemoList 页面仓储 Provider。
 final Provider<DemoListRepository> demoListRepositoryProvider =
     Provider<DemoListRepository>((Ref ref) {
-  return DemoListRepository();
-});
+      return DemoListRepository();
+    });
 
 /// DemoList 页面控制器 Provider。
-final AutoDisposeNotifierProvider<DemoListController, DemoListState>
-    demoListControllerProvider =
-    AutoDisposeNotifierProvider<DemoListController, DemoListState>(
-  DemoListController.new,
-);
+final NotifierProvider<DemoListController, DemoListState>
+demoListControllerProvider =
+    NotifierProvider.autoDispose<DemoListController, DemoListState>(
+      DemoListController.new,
+    );
 
 /// Demo 列表加载更多结果。
 enum DemoListLoadMoreOutcome {
@@ -34,7 +34,7 @@ enum DemoListLoadMoreOutcome {
 /// Demo 列表页面控制器。
 ///
 /// 负责维护分页流程、错误恢复以及主结果态 / 加载更多交互态写入。
-class DemoListController extends AutoDisposeNotifier<DemoListState> {
+class DemoListController extends Notifier<DemoListState> {
   /// 单次请求数量。
   static const int pageSize = 5;
 
@@ -53,9 +53,7 @@ class DemoListController extends AutoDisposeNotifier<DemoListState> {
   /// 首次进入页面时加载数据。
   ///
   /// [username] 表示目标 GitHub 用户名，默认使用演示用户。
-  Future<void> loadInitialData({
-    String? username,
-  }) async {
+  Future<void> loadInitialData({String? username}) async {
     if (state.isLoading) {
       _log.d('忽略首次加载，当前已有加载任务执行中');
       return;
@@ -76,9 +74,7 @@ class DemoListController extends AutoDisposeNotifier<DemoListState> {
   /// 下拉刷新列表数据。
   ///
   /// [username] 表示目标 GitHub 用户名，默认使用演示用户。
-  Future<void> refreshData({
-    String? username,
-  }) async {
+  Future<void> refreshData({String? username}) async {
     if (state.isLoading) {
       _log.d('忽略下拉刷新，当前已有加载任务执行中');
       return;
@@ -111,9 +107,7 @@ class DemoListController extends AutoDisposeNotifier<DemoListState> {
   /// 上拉加载更多数据。
   ///
   /// [username] 表示目标 GitHub 用户名，默认使用演示用户。
-  Future<DemoListLoadMoreOutcome> loadMoreData({
-    String? username,
-  }) async {
+  Future<DemoListLoadMoreOutcome> loadMoreData({String? username}) async {
     if (state.isLoading) {
       _log.d('忽略加载更多，当前已有加载任务执行中');
       return DemoListLoadMoreOutcome.noMore;
@@ -140,9 +134,7 @@ class DemoListController extends AutoDisposeNotifier<DemoListState> {
   /// 重新尝试加载当前页面数据。
   ///
   /// [username] 表示目标 GitHub 用户名，默认使用演示用户。
-  Future<void> retry({
-    String? username,
-  }) async {
+  Future<void> retry({String? username}) async {
     _log.i('用户触发重试，当前page: ${state.page}');
     await refreshData(username: username);
   }
@@ -169,24 +161,23 @@ class DemoListController extends AutoDisposeNotifier<DemoListState> {
         pageSize: pageSize,
       );
 
-      final List<Repo> nextRepos = <Repo>[
-        ...baseRepos,
-        ...data,
-      ];
+      final List<Repo> nextRepos = <Repo>[...baseRepos, ...data];
       final bool isNoMore = !resetBeforeLoad && data.isEmpty;
-      final DemoListLoadMoreStatus nextLoadMoreStatus = resetBeforeLoad
-          ? DemoListLoadMoreStatus.idle
-          : (isNoMore
-              ? DemoListLoadMoreStatus.noMore
-              : DemoListLoadMoreStatus.idle);
+      final DemoListLoadMoreStatus nextLoadMoreStatus =
+          resetBeforeLoad
+              ? DemoListLoadMoreStatus.idle
+              : (isNoMore
+                  ? DemoListLoadMoreStatus.noMore
+                  : DemoListLoadMoreStatus.idle);
 
       state = state.copyWith(
         repos: List<Repo>.unmodifiable(nextRepos),
         page: requestPage + 1,
         hasMore: data.length >= pageSize,
-        pageState: nextRepos.isEmpty
-            ? DemoListPageStateType.empty
-            : DemoListPageStateType.data,
+        pageState:
+            nextRepos.isEmpty
+                ? DemoListPageStateType.empty
+                : DemoListPageStateType.data,
         loadMoreStatus: nextLoadMoreStatus,
         errorMessage: '',
         phase: DemoListLoadPhase.idle,
@@ -209,9 +200,10 @@ class DemoListController extends AutoDisposeNotifier<DemoListState> {
         hasMore: state.hasMore,
         pageState:
             resetBeforeLoad ? DemoListPageStateType.error : state.pageState,
-        loadMoreStatus: resetBeforeLoad
-            ? DemoListLoadMoreStatus.idle
-            : DemoListLoadMoreStatus.failed,
+        loadMoreStatus:
+            resetBeforeLoad
+                ? DemoListLoadMoreStatus.idle
+                : DemoListLoadMoreStatus.failed,
         errorMessage: resetBeforeLoad ? error.toString() : state.errorMessage,
         phase: DemoListLoadPhase.idle,
       );

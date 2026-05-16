@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:github_client_app/common/global.dart';
 import 'package:github_client_app/common/logger.dart';
 import 'package:github_client_app/models/index.dart';
@@ -166,9 +167,7 @@ class ProfileNotifier extends StateNotifier<Profile> {
 
 /// 提供全局 Profile 的 Riverpod 状态入口。
 final StateNotifierProvider<ProfileNotifier, Profile> profileProvider =
-    StateNotifierProvider<ProfileNotifier, Profile>(
-  (ref) => ProfileNotifier(),
-);
+    StateNotifierProvider<ProfileNotifier, Profile>((ref) => ProfileNotifier());
 
 /// 提供当前登录用户信息。
 final Provider<User?> userProvider = Provider<User?>(
@@ -181,20 +180,18 @@ final Provider<bool> isLoginProvider = Provider<bool>(
 );
 
 /// 提供当前主题色。
-final Provider<MaterialColor> themeProvider = Provider<MaterialColor>(
-  (ref) {
-    final Profile profile = ref.watch(profileProvider);
-    final MaterialColor theme = Global.themes.firstWhere(
-      (MaterialColor e) => e.toARGB32() == profile.theme,
-      orElse: () => Colors.blue,
-    );
-    _log.i(
-      'themeProvider resolved, profileTheme=${profile.theme}, '
-      'resolvedTheme=${theme.toARGB32()}, hasUser=${profile.user != null}',
-    );
-    return theme;
-  },
-);
+final Provider<MaterialColor> themeProvider = Provider<MaterialColor>((ref) {
+  final Profile profile = ref.watch(profileProvider);
+  final MaterialColor theme = Global.themes.firstWhere(
+    (MaterialColor e) => e.toARGB32() == profile.theme,
+    orElse: () => Colors.blue,
+  );
+  _log.i(
+    'themeProvider resolved, profileTheme=${profile.theme}, '
+    'resolvedTheme=${theme.toARGB32()}, hasUser=${profile.user != null}',
+  );
+  return theme;
+});
 
 /// 提供当前语言标识。
 final Provider<String?> localeCodeProvider = Provider<String?>(
@@ -246,14 +243,16 @@ Profile _cloneProfile(Profile source) {
       jsonDecode(jsonEncode(source.toJson())) as Map<String, dynamic>;
 
   return Profile()
-    ..user = json['user'] == null
-        ? null
-        : User.fromJson(json['user'] as Map<String, dynamic>)
+    ..user =
+        json['user'] == null
+            ? null
+            : User.fromJson(json['user'] as Map<String, dynamic>)
     ..token = json['token'] as String?
     ..theme = json['theme'] as num
-    ..cache = json['cache'] == null
-        ? null
-        : CacheConfig.fromJson(json['cache'] as Map<String, dynamic>)
+    ..cache =
+        json['cache'] == null
+            ? null
+            : CacheConfig.fromJson(json['cache'] as Map<String, dynamic>)
     ..lastLogin = json['lastLogin'] as String?
     ..locale = json['locale'] as String?;
 }

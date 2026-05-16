@@ -18,14 +18,13 @@ void main() {
       ],
     );
     final ProviderContainer container = ProviderContainer(
-      overrides: <Override>[
-        demoListRepositoryProvider.overrideWithValue(repository),
-      ],
+      overrides: [demoListRepositoryProvider.overrideWithValue(repository)],
     );
     addTearDown(container.dispose);
 
-    final DemoListController controller =
-        container.read(demoListControllerProvider.notifier);
+    final DemoListController controller = container.read(
+      demoListControllerProvider.notifier,
+    );
 
     await controller.loadInitialData();
 
@@ -33,8 +32,9 @@ void main() {
     repository.enqueueResponse(refreshCompleter.future);
 
     final Future<void> refreshFuture = controller.refreshData();
-    final DemoListState duringRefresh =
-        container.read(demoListControllerProvider);
+    final DemoListState duringRefresh = container.read(
+      demoListControllerProvider,
+    );
 
     expect(duringRefresh.phase, DemoListLoadPhase.refreshing);
     expect(duringRefresh.pageState, DemoListPageStateType.data);
@@ -46,8 +46,9 @@ void main() {
     refreshCompleter.complete(<Repo>[_buildRepo(id: 2, name: 'repo-2')]);
     await refreshFuture;
 
-    final DemoListState afterRefresh =
-        container.read(demoListControllerProvider);
+    final DemoListState afterRefresh = container.read(
+      demoListControllerProvider,
+    );
     expect(afterRefresh.phase, DemoListLoadPhase.idle);
     expect(afterRefresh.pageState, DemoListPageStateType.data);
     expect(afterRefresh.loadMoreStatus, DemoListLoadMoreStatus.idle);
@@ -62,19 +63,19 @@ void main() {
       ],
     );
     final ProviderContainer container = ProviderContainer(
-      overrides: <Override>[
-        demoListRepositoryProvider.overrideWithValue(repository),
-      ],
+      overrides: [demoListRepositoryProvider.overrideWithValue(repository)],
     );
     addTearDown(container.dispose);
 
-    final DemoListController controller =
-        container.read(demoListControllerProvider.notifier);
+    final DemoListController controller = container.read(
+      demoListControllerProvider.notifier,
+    );
 
     await controller.loadInitialData();
 
-    final DemoListState failedState =
-        container.read(demoListControllerProvider);
+    final DemoListState failedState = container.read(
+      demoListControllerProvider,
+    );
     final DemoListStateItemData failedItem =
         failedState.items.single as DemoListStateItemData;
     expect(failedState.hasError, isTrue);
@@ -87,8 +88,9 @@ void main() {
     repository.enqueueResponse(retryCompleter.future);
 
     final Future<void> retryFuture = controller.retry();
-    final DemoListState duringRetry =
-        container.read(demoListControllerProvider);
+    final DemoListState duringRetry = container.read(
+      demoListControllerProvider,
+    );
     final DemoListStateItemData duringRetryItem =
         duringRetry.items.single as DemoListStateItemData;
 
@@ -101,8 +103,9 @@ void main() {
     retryCompleter.complete(<Repo>[_buildRepo(id: 3, name: 'repo-3')]);
     await retryFuture;
 
-    final DemoListState recoveredState =
-        container.read(demoListControllerProvider);
+    final DemoListState recoveredState = container.read(
+      demoListControllerProvider,
+    );
     expect(recoveredState.phase, DemoListLoadPhase.idle);
     expect(recoveredState.pageState, DemoListPageStateType.data);
     expect(recoveredState.loadMoreStatus, DemoListLoadMoreStatus.idle);
@@ -125,26 +128,27 @@ void main() {
       ],
     );
     final ProviderContainer container = ProviderContainer(
-      overrides: <Override>[
-        demoListRepositoryProvider.overrideWithValue(repository),
-      ],
+      overrides: [demoListRepositoryProvider.overrideWithValue(repository)],
     );
     addTearDown(container.dispose);
 
-    final DemoListController controller =
-        container.read(demoListControllerProvider.notifier);
+    final DemoListController controller = container.read(
+      demoListControllerProvider.notifier,
+    );
 
     await controller.loadInitialData();
-    final DemoListState afterInitial =
-        container.read(demoListControllerProvider);
+    final DemoListState afterInitial = container.read(
+      demoListControllerProvider,
+    );
     expect(afterInitial.hasMore, isTrue);
     expect(afterInitial.pageState, DemoListPageStateType.data);
     expect(afterInitial.loadMoreStatus, DemoListLoadMoreStatus.idle);
     expect(afterInitial.items, hasLength(10));
 
     final DemoListLoadMoreOutcome outcome = await controller.loadMoreData();
-    final DemoListState afterLoadMore =
-        container.read(demoListControllerProvider);
+    final DemoListState afterLoadMore = container.read(
+      demoListControllerProvider,
+    );
 
     expect(outcome, DemoListLoadMoreOutcome.noMore);
     expect(afterLoadMore.phase, DemoListLoadPhase.idle);
@@ -170,25 +174,26 @@ void main() {
       ],
     );
     final ProviderContainer container = ProviderContainer(
-      overrides: <Override>[
-        demoListRepositoryProvider.overrideWithValue(repository),
-      ],
+      overrides: [demoListRepositoryProvider.overrideWithValue(repository)],
     );
     addTearDown(container.dispose);
 
-    final DemoListController controller =
-        container.read(demoListControllerProvider.notifier);
+    final DemoListController controller = container.read(
+      demoListControllerProvider.notifier,
+    );
 
     await controller.loadInitialData();
-    final DemoListState afterInitial =
-        container.read(demoListControllerProvider);
+    final DemoListState afterInitial = container.read(
+      demoListControllerProvider,
+    );
     expect(afterInitial.items, hasLength(10));
     expect(afterInitial.pageState, DemoListPageStateType.data);
     expect(afterInitial.loadMoreStatus, DemoListLoadMoreStatus.idle);
 
     final DemoListLoadMoreOutcome outcome = await controller.loadMoreData();
-    final DemoListState afterFailedLoadMore =
-        container.read(demoListControllerProvider);
+    final DemoListState afterFailedLoadMore = container.read(
+      demoListControllerProvider,
+    );
 
     expect(outcome, DemoListLoadMoreOutcome.failed);
     expect(afterFailedLoadMore.phase, DemoListLoadPhase.idle);
@@ -198,7 +203,9 @@ void main() {
     expect(afterFailedLoadMore.loadMoreStatus, DemoListLoadMoreStatus.failed);
     expect(afterFailedLoadMore.items, hasLength(10));
     expect(
-        afterFailedLoadMore.items.whereType<DemoListStateItemData>(), isEmpty);
+      afterFailedLoadMore.items.whereType<DemoListStateItemData>(),
+      isEmpty,
+    );
   });
 }
 
@@ -208,10 +215,7 @@ void main() {
 /// [name] 表示仓库名称。
 ///
 /// 返回值：满足当前列表展示所需字段的测试仓库对象。
-Repo _buildRepo({
-  required int id,
-  required String name,
-}) {
+Repo _buildRepo({required int id, required String name}) {
   final Repo repo = Repo();
   repo.id = id;
   repo.name = name;
@@ -280,9 +284,8 @@ class _FakeDemoListRepository extends DemoListRepository {
   /// 创建仓储测试替身。
   ///
   /// [responses] 表示按调用顺序返回的结果队列。
-  _FakeDemoListRepository({
-    required List<Future<List<Repo>>> responses,
-  }) : _responses = Queue<Future<List<Repo>>>.from(responses);
+  _FakeDemoListRepository({required List<Future<List<Repo>>> responses})
+    : _responses = Queue<Future<List<Repo>>>.from(responses);
 
   final Queue<Future<List<Repo>>> _responses;
 

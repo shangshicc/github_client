@@ -7,7 +7,7 @@ final _selectorNotifierLogger = createLogger('SelectorNotifier');
 /// Selector 页面状态控制器。
 ///
 /// 该控制器负责初始化商品列表，并在点击时切换指定商品的收藏状态。
-class SelectorNotifier extends AutoDisposeNotifier<SelectorState> {
+class SelectorNotifier extends Notifier<SelectorState> {
   /// 构建 Selector 页面初始状态。
   ///
   /// 返回值：包含 10 条初始商品数据的页面状态对象。
@@ -31,8 +31,9 @@ class SelectorNotifier extends AutoDisposeNotifier<SelectorState> {
   /// 副作用：会生成新的商品列表状态，并触发对应 UI 刷新。
   void collect(int index) {
     _selectorNotifierLogger.i('切换商品收藏状态，index=$index');
-    final List<SelectorGoodsItem> updatedList =
-        List<SelectorGoodsItem>.from(state.goodsList);
+    final List<SelectorGoodsItem> updatedList = List<SelectorGoodsItem>.from(
+      state.goodsList,
+    );
     final SelectorGoodsItem currentItem = updatedList[index];
     updatedList[index] = currentItem.copyWith(
       isCollection: !currentItem.isCollection,
@@ -45,8 +46,7 @@ class SelectorNotifier extends AutoDisposeNotifier<SelectorState> {
 }
 
 /// Selector 页面的 Riverpod Provider。
-final AutoDisposeNotifierProvider<SelectorNotifier, SelectorState>
-    selectorProvider =
-    AutoDisposeNotifierProvider<SelectorNotifier, SelectorState>(
-  SelectorNotifier.new,
-);
+final NotifierProvider<SelectorNotifier, SelectorState> selectorProvider =
+    NotifierProvider.autoDispose<SelectorNotifier, SelectorState>(
+      SelectorNotifier.new,
+    );
