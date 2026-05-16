@@ -22,10 +22,10 @@ void main() {
     Global.profile.theme = Colors.blue.toARGB32();
   });
 
-  testWidgets('DemoListRoute 首帧会自动触发首次加载并展示列表', (WidgetTester tester) async {
+  testWidgets('DemoListRoute 首帧会自动触发首次加载并展示错误态', (WidgetTester tester) async {
     final _FakeDemoListRepository repository = _FakeDemoListRepository(
-      responses: <Future<List<Repo>>>[
-        Future<List<Repo>>.value(<Repo>[_buildRepo(id: 1, name: 'repo-1')]),
+      responses: <_FakeResponseFactory>[
+        () => Future<List<Repo>>.error(Exception('network down')),
       ],
     );
 
@@ -42,15 +42,17 @@ void main() {
     await tester.pump();
 
     expect(repository.requests, hasLength(1));
-    expect(find.text('repo-1'), findsOneWidget);
-    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('Exception: network down'), findsOneWidget);
+
+    await _disposeRoute(tester);
   });
 
   testWidgets('DemoListRoute 错误页点击重试后可恢复列表展示', (WidgetTester tester) async {
     final _FakeDemoListRepository repository = _FakeDemoListRepository(
-      responses: <Future<List<Repo>>>[
-        Future<List<Repo>>.error(Exception('network down')),
-        Future<List<Repo>>.value(<Repo>[_buildRepo(id: 2, name: 'repo-2')]),
+      responses: <_FakeResponseFactory>[
+        () => Future<List<Repo>>.error(Exception('network down')),
+        () =>
+            Future<List<Repo>>.value(<Repo>[_buildRepo(id: 2, name: 'repo-2')]),
       ],
     );
 
@@ -74,6 +76,8 @@ void main() {
     expect(repository.requests, hasLength(2));
     expect(find.text('repo-2'), findsOneWidget);
     expect(find.text('Exception: network down'), findsNothing);
+
+    await _disposeRoute(tester);
   });
 }
 
@@ -92,11 +96,13 @@ class _TestApp extends StatelessWidget {
   }
 }
 
-class _FakeDemoListRepository extends DemoListRepository {
-  _FakeDemoListRepository({required List<Future<List<Repo>>> responses})
-    : _responses = Queue<Future<List<Repo>>>.from(responses);
+typedef _FakeResponseFactory = Future<List<Repo>> Function();
 
-  final Queue<Future<List<Repo>>> _responses;
+class _FakeDemoListRepository extends DemoListRepository {
+  _FakeDemoListRepository({required List<_FakeResponseFactory> responses})
+    : _responses = Queue<_FakeResponseFactory>.from(responses);
+
+  final Queue<_FakeResponseFactory> _responses;
   final List<_FetchRequest> requests = <_FetchRequest>[];
 
   /// 按预设响应返回仓库列表，并记录每次请求参数。
@@ -118,7 +124,7 @@ class _FakeDemoListRepository extends DemoListRepository {
     if (_responses.isEmpty) {
       throw StateError('No fake response queued for fetchRepos');
     }
-    return _responses.removeFirst();
+    return _responses.removeFirst()();
   }
 }
 
@@ -132,6 +138,16 @@ class _FetchRequest {
   final String username;
   final int page;
   final int pageSize;
+}
+
+/// 主动卸载 DemoListRoute，尽量清空第三方滚动组件残留的异步任务。
+///
+/// [tester] 表示当前 widget 测试驱动器。
+///
+/// 方法会把页面替换为空组件，并额外推进一小段时间让销毁回调完成。
+Future<void> _disposeRoute(WidgetTester tester) async {
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.pump(const Duration(milliseconds: 50));
 }
 
 /// 构建用于测试的最小仓库对象。
