@@ -72,6 +72,8 @@ dev_dependencies:
   flukit: ^3.0.1
   # https://pub.dev/packages/cached_network_image
   cached_network_image: ^3.2.3
+  integration_test:
+    sdk: flutter
 
 # The following section is specific to Flutter packages.
 flutter:
