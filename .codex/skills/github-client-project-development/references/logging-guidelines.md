@@ -6,6 +6,7 @@
 
 - 日志用于定位核心链路和异常问题，不是为了凑数量。
 - 优先记录“开始做什么、成功结果、异常原因、关键上下文”。
+- 新增日志内容优先使用英文；维护已有中文日志模块时，维护已有中文日志模块时，使用英文优化
 - 日志内容应简洁、稳定、可搜索。
 - 不输出敏感信息，如 token、Authorization、密码、Cookie、完整隐私数据。
 - 长对象不要整包打印，优先输出关键字段摘要。
@@ -23,9 +24,9 @@ final _log = createLogger('[ModuleName]');
 
 建议：
 
-- 每个 Page / Provider / Repository / Service 文件最多保留一个模块级 logger
-- 模块名建议使用 `[模块名]` 格式
-- 如果当前文件已有 `_log`，优先复用
+- 每个 Page / Riverpod Notifier / Provider / Repository / Service 文件最多保留一个模块级 logger。
+- 模块名建议使用 `[ModuleName]` 格式。
+- 如果当前文件已有 `_log`，优先复用。
 
 ## 日志级别约定
 
@@ -33,57 +34,48 @@ final _log = createLogger('[ModuleName]');
 
 用于记录调试细节、关键入参、分页信息、状态切换前后、分支命中等。
 
-示例：
-
 ```dart
-_log.d('请求分页，username: $username, page: $_page, reset: $resetBeforeLoad');
+_log.d('Page request started, username=$username, page=$page, reset=$resetBeforeLoad');
 ```
 
 ### info
 
 用于记录核心链路上的重要节点。
 
-示例：
-
 ```dart
-_log.i('开始初始化加载，username: $username');
-_log.i('列表加载成功，count: ${repos.length}, hasMore: $_hasMore');
+_log.i('Initial load requested, username=$username');
+_log.i('Repository list loaded, count=${repos.length}, hasMore=$hasMore');
 ```
 
 ### warning
 
 用于记录可恢复异常、空数据、跳过执行、降级逻辑。
 
-示例：
-
 ```dart
-_log.w('列表为空，username: $username');
-_log.w('当前正在加载中，忽略重复请求');
+_log.w('Repository list is empty, username=$username');
+_log.w('Load skipped because another task is running');
 ```
 
 ### error
 
 用于记录明确异常。
 
-示例：
-
 ```dart
 _log.e(
-  '加载失败，username: $username, page: $_page, error: $e',
-  error: e,
+  'Repository list load failed, username=$username, page=$page',
+  error: error,
   stackTrace: stackTrace,
 );
 ```
 
 ## 必须加日志的场景
 
-以下场景必须补日志：
-
 ### 1. 核心链路入口
 
 例如：
 
 - 页面初始化
+- Provider / Notifier 初始化
 - 首次加载
 - 下拉刷新
 - 上拉加载更多
@@ -124,32 +116,30 @@ _log.e(
 - 用户点击重试、提交、切换 tab、切换筛选条件
 - 页面级错误提示触发前后的状态
 
-示例：
-
 ```dart
-_log.i('页面初始化，username: $username');
-_log.i('用户点击重试，username: $username');
-_log.d('用户切换筛选条件，tab: $tab');
+_log.i('Profile page initialized, username=$username');
+_log.i('Retry tapped, username=$username');
+_log.d('Filter changed, tab=$tab');
 ```
 
-### Provider / ChangeNotifier 层
+### Riverpod Notifier / Provider 层
 
 适合记录：
 
-- load / refresh / loadMore / retry 入口
-- 状态切换
-- 列表为空
-- 是否还有更多
+- `build` 中的初始化或首屏加载入口
+- load / refresh / loadMore / retry 等用户或页面动作入口
+- `state` 状态切换
+- 列表为空、跳过重复请求、没有更多数据等边界分支
 - 异常后状态更新
 
-示例：
-
 ```dart
-_log.i('开始初始化加载，username: $username');
-_log.d('请求分页，page: $_page, reset: $resetBeforeLoad');
-_log.i('分页加载成功，count: ${repos.length}, hasMore: $_hasMore');
-_log.w('列表为空，username: $username');
+_log.i('Initial load requested, username=$username');
+_log.d('Page request started, page=$requestPage, reset=$resetBeforeLoad');
+_log.i('Page request completed, count=${repos.length}, hasMore=${state.hasMore}');
+_log.w('Repository list is empty, username=$username');
 ```
+
+遗留 `ChangeNotifier` 模块只在维护旧代码时沿用原有日志位置；新增状态优先使用 Riverpod 3.x 注解模板。
 
 ### Repository / Service 层
 
@@ -160,12 +150,10 @@ _log.w('列表为空，username: $username');
 - 空结果
 - 请求异常
 
-示例：
-
 ```dart
-_log.d('开始请求仓库列表，username: $username, page: $page');
-_log.i('仓库列表请求成功，count: ${response.length}');
-_log.w('仓库列表结果为空，username: $username');
+_log.d('Repository list request started, username=$username, page=$page');
+_log.i('Repository list request completed, count=${response.length}');
+_log.w('Repository list request returned empty result, username=$username');
 ```
 
 ### Cache / Storage 层
@@ -177,12 +165,10 @@ _log.w('仓库列表结果为空，username: $username');
 - 写入缓存
 - 缓存异常
 
-示例：
-
 ```dart
-_log.d('读取缓存，key: $cacheKey');
-_log.i('缓存命中，key: $cacheKey');
-_log.w('缓存未命中，key: $cacheKey');
+_log.d('Cache read started, key=$cacheKey');
+_log.i('Cache hit, key=$cacheKey');
+_log.w('Cache miss, key=$cacheKey');
 ```
 
 ## 不建议打印的场景
@@ -193,7 +179,7 @@ _log.w('缓存未命中，key: $cacheKey');
 - 列表 item 的 `itemBuilder`
 - 动画帧回调
 - 高频滚动监听
-- 每次 `notifyListeners()` 前后都打印同类日志
+- 每次 `state` 写入或遗留 `notifyListeners()` 前后都打印同类日志
 - 大对象整包输出
 - 敏感请求头和鉴权字段
 
@@ -201,20 +187,11 @@ _log.w('缓存未命中，key: $cacheKey');
 
 推荐使用这种句式：
 
-- 开始 + 动作 + 上下文
-- 成功 + 动作 + 结果摘要
-- 失败 + 动作 + 关键上下文 + error
-- 跳过 + 原因
-- 空态 + 查询条件
-
-推荐示例：
-
-- `开始初始化加载，username: $username`
-- `开始加载更多，page: $_page`
-- `仓库列表请求成功，count: ${repos.length}`
-- `列表为空，username: $username`
-- `当前正在加载中，忽略重复请求`
-- `加载失败，username: $username, page: $_page, error: $e`
+- 动作开始：`<Action> requested/started, <context>`
+- 动作成功：`<Action> completed, <result summary>`
+- 动作失败：`<Action> failed, <context>`，并传入 `error` 与 `stackTrace`
+- 跳过执行：`<Action> skipped because <reason>`
+- 空态：`<Action> completed with empty result, <query condition>`
 
 ## 最低日志要求
 
@@ -228,7 +205,9 @@ _log.w('缓存未命中，key: $cacheKey');
 适用范围：
 
 - 网络请求方法
-- Provider / ChangeNotifier 中会改状态的方法
+- Riverpod `Notifier` / `AsyncNotifier` 中会改状态的方法
+- 函数式 `@riverpod` 中承载关键派生逻辑的方法
+- 遗留 `ChangeNotifier` 中会改状态的方法
 - 分页 / 刷新 / 重试方法
 - 含 `try-catch` 的方法
 - 有错误态、空态、降级逻辑的方法

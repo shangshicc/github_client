@@ -27,7 +27,7 @@ class ModuleRepository {
     required int pageSize,
   }) async {
     _log.d(
-      '开始请求列表数据，username: $username, page: $page, pageSize: $pageSize',
+      'List request started, username=$username, page=$page, pageSize=$pageSize',
     );
 
     try {
@@ -38,19 +38,19 @@ class ModuleRepository {
       );
 
       if (response.isEmpty) {
-        _log.w('列表请求成功但结果为空，username: $username, page: $page');
+        _log.w('List request returned empty result, username=$username, page=$page');
         return <dynamic>[];
       }
 
       _log.i(
-        '列表请求成功，count: ${response.length}, username: $username, page: $page',
+        'List request completed, count=${response.length}, username=$username, page=$page',
       );
 
       return response;
-    } catch (e, stackTrace) {
+    } catch (error, stackTrace) {
       _log.e(
-        '列表请求失败，username: $username, page: $page, error: $e',
-        error: e,
+        'List request failed, username=$username, page=$page',
+        error: error,
         stackTrace: stackTrace,
       );
       rethrow;
@@ -63,22 +63,22 @@ class ModuleRepository {
   Future<List<dynamic>> readCache({
     required String cacheKey,
   }) async {
-    _log.d('开始读取缓存，key: $cacheKey');
+    _log.d('Cache read started, key=$cacheKey');
 
     try {
       final cache = await _readLocalCache(cacheKey: cacheKey);
 
       if (cache.isEmpty) {
-        _log.w('缓存未命中，key: $cacheKey');
+        _log.w('Cache miss, key=$cacheKey');
         return <dynamic>[];
       }
 
-      _log.i('缓存读取成功，key: $cacheKey, count: ${cache.length}');
+      _log.i('Cache read completed, key=$cacheKey, count=${cache.length}');
       return cache;
-    } catch (e, stackTrace) {
+    } catch (error, stackTrace) {
       _log.e(
-        '缓存读取失败，key: $cacheKey, error: $e',
-        error: e,
+        'Cache read failed, key=$cacheKey',
+        error: error,
         stackTrace: stackTrace,
       );
       rethrow;
@@ -111,8 +111,8 @@ class ModuleRepository {
 
 ## 使用说明
 
-- 请求前记录必要参数摘要，不打印敏感头信息
-- 请求成功后记录结果摘要，如 count、页码、是否为空
-- 空态要记录 warning，便于区分“成功但无数据”和“请求失败”
-- catch 中统一输出 error，并尽量保留 stackTrace
-- 如果当前仓储已存在统一异常转换逻辑，沿用现有模式
+- 请求前记录必要参数摘要，不打印敏感头信息。
+- 请求成功后记录结果摘要，如 count、页码、是否为空。
+- 空态要记录 warning，便于区分“成功但无数据”和“请求失败”。
+- catch 中统一输出 error，并尽量保留 stackTrace。
+- 如果当前仓储已存在统一异常转换逻辑，沿用现有模式。
