@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub Client 开发"
+  short_description: "GitHub Client Flutter 项目开发规范"
+  default_prompt: "Use $github-client-project-development 在 github_client 中按项目规范实现或修复 Flutter 功能。"
