@@ -1,0 +1,4 @@
+interface:
+  display_name: "Detail Plan Executor"
+  short_description: "按 detail plan 分步实现并完成验证"
+  default_prompt: "请使用 $detail-plan-executor 在 github_client 项目内按已批准的 detail plan 分步实现需求，并按开发→构建/打包→单元测试→UI 测试→集成测试→lint 的顺序验证。"
