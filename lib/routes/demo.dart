@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:github_client_app/common/funs.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
-import 'package:github_client_app/routes/demo/list/demo_list_route.dart';
-import 'package:github_client_app/routes/demo/nested_scroll/demo_nested_scroll_route.dart';
+import 'package:github_client_app/router/app_route_paths.dart';
 
 class DemoRoute extends StatelessWidget {
   const DemoRoute({super.key});
@@ -39,18 +39,14 @@ class DemoRoute extends StatelessWidget {
   ///
   /// [context] 表示当前页面上下文，用于执行页面跳转。
   void _openListDemo(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const DemoListRoute()),
-    );
+    context.push(AppRoutePaths.demoList);
   }
 
   /// 打开 NestedScrollView 经典业务 Demo 页面。
   ///
   /// [context] 表示当前页面上下文，用于执行页面跳转。
   void _openNestedScrollDemo(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => const DemoNestedScrollRoute()),
-    );
+    context.push(AppRoutePaths.demoNestedScroll);
   }
 
   void onPressed() {

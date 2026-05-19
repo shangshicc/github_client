@@ -1,13 +1,13 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     show ConsumerState, ConsumerStatefulWidget, ConsumerWidget, WidgetRef;
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/common/funs.dart';
 import 'package:github_client_app/common/git_api.dart';
 import 'package:github_client_app/models/index.dart';
-import 'package:github_client_app/routes/detail_page.dart';
-import 'package:github_client_app/routes/selector_page.dart';
+import 'package:github_client_app/router/app_route_paths.dart';
 import 'package:github_client_app/states/riverpod/counter_provider.dart';
 import 'package:github_client_app/states/profile_state.dart';
 import '../widgets/repo_item.dart';
@@ -43,16 +43,14 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
               fontSize: 18,
               fontWeight: FontWeight.normal,
             ),
-          )
+          ),
         ],
       ),
       body: _buildBody(), // 构建主页面
       drawer: const MyDrawer(), //构建抽屉组件
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
-        onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (context) => const SelectorPage()),
-        ),
+        onPressed: () => context.push(AppRoutePaths.selector),
       ),
     );
   }
@@ -65,7 +63,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
       return Center(
         child: ElevatedButton(
           child: Text(l10n.login),
-          onPressed: () => Navigator.of(context).pushNamed("login"),
+          onPressed: () => context.push(AppRoutePaths.login),
         ),
       );
     } else {
@@ -101,9 +99,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
           //显示单词列表项
           return GestureDetector(
             onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const DetailPage()),
-              );
+              context.push(AppRoutePaths.detail);
             },
             child: RepoItem(_items[index]),
           );
@@ -116,11 +112,7 @@ class _HomeRouteState extends ConsumerState<HomeRoute> {
   void _retrieveDate(String username) async {
     try {
       var data = await Git().getRepos(
-        queryParmeters: {
-          'username': username,
-          'page': page,
-          'page_size': 20,
-        },
+        queryParmeters: {'username': username, 'page': page, 'page_size': 20},
       );
       //如果返回的数据小于指定的条数，则表示没有更多数据，反之则否
       hasMore = data.isNotEmpty && data.length % 20 == 0;
@@ -143,15 +135,16 @@ class MyDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Drawer(
       child: MediaQuery.removePadding(
-          context: context,
-          removeBottom: true,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(), // 构建抽屉菜单头部
-              Expanded(child: _buildMenus()), //构建功能菜单
-            ],
-          )),
+        context: context,
+        removeBottom: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(), // 构建抽屉菜单头部
+            Expanded(child: _buildMenus()), //构建功能菜单
+          ],
+        ),
+      ),
     );
   }
 
@@ -188,12 +181,10 @@ class _DrawerHeaderSection extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10),
               child: ClipOval(
                 // 如果已登录，则显示用户头像；若未登录，则显示默认头像
-                child: login
-                    ? gmAvatar(user?.avatar_url ?? "", width: 80)
-                    : Image.asset(
-                        "imgs/avatar-default.png",
-                        width: 80,
-                      ),
+                child:
+                    login
+                        ? gmAvatar(user?.avatar_url ?? "", width: 80)
+                        : Image.asset("imgs/avatar-default.png", width: 80),
               ),
             ),
             Text(
@@ -208,7 +199,7 @@ class _DrawerHeaderSection extends ConsumerWidget {
       ),
       onTap: () {
         if (!login) {
-          Navigator.of(context).pushNamed("login");
+          context.push(AppRoutePaths.login);
         }
       },
     );
@@ -228,45 +219,47 @@ class _DrawerMenusSection extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.color_lens),
           title: Text(l10n.theme),
-          onTap: () => Navigator.pushNamed(context, "themes"),
+          onTap: () => context.push(AppRoutePaths.themes),
         ),
         ListTile(
           leading: const Icon(Icons.language),
           title: Text(l10n.language),
-          onTap: () => Navigator.pushNamed(context, "language"),
+          onTap: () => context.push(AppRoutePaths.language),
         ),
         ListTile(
           leading: const Icon(Icons.info),
           title: Text(l10n.demo),
-          onTap: () => Navigator.pushNamed(context, "demo"),
+          onTap: () => context.push(AppRoutePaths.demo),
         ),
         if (login)
           ListTile(
-              leading: const Icon(Icons.power_settings_new),
-              title: Text(l10n.logout),
-              onTap: () {
-                showDialog(
-                    context: context,
-                    builder: (ctx) {
-                      return AlertDialog(
-                        content: Text(l10n.logoutTip),
-                        actions: [
-                          TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: Text(l10n.cancel)),
-                          TextButton(
-                              onPressed: () {
-                                // 该赋值语法会重新触发MaterialApp rebuild
-                                ref.read(profileProvider.notifier).updateUser(
-                                      null,
-                                    );
-                                Navigator.pop(context);
-                              },
-                              child: Text(l10n.yes))
-                        ],
-                      );
-                    });
-              }),
+            leading: const Icon(Icons.power_settings_new),
+            title: Text(l10n.logout),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (dialogContext) {
+                  return AlertDialog(
+                    content: Text(l10n.logoutTip),
+                    actions: [
+                      TextButton(
+                        onPressed: () => dialogContext.pop(),
+                        child: Text(l10n.cancel),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          // 该赋值语法会重新触发MaterialApp rebuild
+                          ref.read(profileProvider.notifier).updateUser(null);
+                          dialogContext.pop();
+                        },
+                        child: Text(l10n.yes),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
       ],
     );
   }

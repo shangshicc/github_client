@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
-import 'package:github_client_app/routes/home_page.dart';
-import 'package:github_client_app/routes/language.dart';
-import 'package:github_client_app/routes/login.dart';
-import 'package:github_client_app/routes/theme_change.dart';
+import 'package:github_client_app/router/app_router.dart';
 import 'package:github_client_app/states/profile_state.dart';
 import 'common/global.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'common/logger.dart';
-import 'routes/demo.dart';
 
 final _log = createLogger('AppRoot');
 
@@ -61,15 +57,13 @@ class _AppRoot extends ConsumerWidget {
       '_AppRoot build, theme=${themeModel.toARGB32()}, '
       'locale=${locale?.toString() ?? "system"}',
     );
-    return MaterialApp(
-      theme: ThemeData(
-        primarySwatch: _materialColorFromSwatch(themeModel),
-      ),
+    return MaterialApp.router(
+      theme: ThemeData(primarySwatch: _materialColorFromSwatch(themeModel)),
       onGenerateTitle: (context) {
         return AppLocalizations.of(context).title;
       },
-      home: const HomeRoute(),
       locale: locale,
+      routerConfig: appRouter,
       // 获取当前支持的语言
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
@@ -112,13 +106,6 @@ class _AppRoot extends ConsumerWidget {
           (l) => l.languageCode == 'en',
           orElse: () => supportedLocales.first,
         );
-      },
-      // 注册路由
-      routes: <String, WidgetBuilder>{
-        "login": (context) => const LoginRoute(),
-        "themes": (context) => const ThemeChangeRoute(),
-        "language": (context) => const LanguageRoute(),
-        "demo": (context) => const DemoRoute()
       },
     );
   }

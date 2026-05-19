@@ -116,77 +116,79 @@ class DemoNestedScrollRoute extends StatelessWidget {
         bottom: false,
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 72, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const CircleAvatar(
-                    radius: 28,
-                    child: Icon(Icons.person, size: 28),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Chen Wei',
-                          style: textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '@chenwei-dev',
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.92),
-                          ),
-                        ),
-                      ],
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const CircleAvatar(
+                      radius: 28,
+                      child: Icon(Icons.person, size: 28),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Text(
-                l10n.demoNestedScrollProfileBio,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                  height: 1.45,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Chen Wei',
+                            style: textTheme.titleLarge?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '@chenwei-dev',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.92),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      context: context,
-                      value: '32',
-                      label: l10n.demoNestedScrollStatsRepos,
-                    ),
+                const SizedBox(height: 16),
+                Text(
+                  l10n.demoNestedScrollProfileBio,
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    height: 1.45,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      context: context,
-                      value: '1.2k',
-                      label: l10n.demoNestedScrollStatsFollowers,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildStatCard(
+                        context: context,
+                        value: '32',
+                        label: l10n.demoNestedScrollStatsRepos,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      context: context,
-                      value: '186',
-                      label: l10n.demoNestedScrollStatsFollowing,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        context: context,
+                        value: '1.2k',
+                        label: l10n.demoNestedScrollStatsFollowers,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildStatCard(
+                        context: context,
+                        value: '186',
+                        label: l10n.demoNestedScrollStatsFollowing,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
