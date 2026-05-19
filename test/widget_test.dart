@@ -88,33 +88,53 @@ void main() {
     expect(find.byType(DetailPage), findsOneWidget);
   });
 
-  testWidgets('Drawer -> themes/language/demo routes all resolve', (
+  testWidgets(
+    'Drawer unauthenticated -> themes redirects login, language/demo still resolve',
+    (WidgetTester tester) async {
+      Global.profile = models.Profile()..theme = Colors.blue.toARGB32();
+
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: _RouteApp(initialLocation: AppRoutePaths.home),
+        ),
+      );
+
+      await _openDrawer(tester);
+      await tester.tap(find.widgetWithIcon(ListTile, Icons.color_lens));
+      await tester.pumpAndSettle();
+      expect(find.byType(LoginRoute), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      await _openDrawer(tester);
+      await tester.tap(find.widgetWithIcon(ListTile, Icons.language));
+      await tester.pumpAndSettle();
+      expect(find.byType(LanguageRoute), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      await _openDrawer(tester);
+      await tester.tap(find.widgetWithIcon(ListTile, Icons.info));
+      await tester.pumpAndSettle();
+      expect(find.byType(DemoRoute), findsOneWidget);
+    },
+  );
+
+  testWidgets('Direct route /themes unauthenticated redirects to LoginRoute', (
     WidgetTester tester,
   ) async {
+    Global.profile = models.Profile()..theme = Colors.blue.toARGB32();
+
     await tester.pumpWidget(
       const ProviderScope(
-        child: _RouteApp(initialLocation: AppRoutePaths.home),
+        child: _RouteApp(initialLocation: AppRoutePaths.themes),
       ),
     );
 
-    await _openDrawer(tester);
-    await tester.tap(find.widgetWithIcon(ListTile, Icons.color_lens));
     await tester.pumpAndSettle();
-    expect(find.byType(ThemeChangeRoute), findsOneWidget);
 
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    await _openDrawer(tester);
-    await tester.tap(find.widgetWithIcon(ListTile, Icons.language));
-    await tester.pumpAndSettle();
-    expect(find.byType(LanguageRoute), findsOneWidget);
-
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    await _openDrawer(tester);
-    await tester.tap(find.widgetWithIcon(ListTile, Icons.info));
-    await tester.pumpAndSettle();
-    expect(find.byType(DemoRoute), findsOneWidget);
+    expect(find.byType(LoginRoute), findsOneWidget);
+    expect(find.byType(ThemeChangeRoute), findsNothing);
   });
 
   testWidgets('Demo -> demo list / nested scroll and back stack', (
@@ -152,7 +172,11 @@ void main() {
   testWidgets('Theme rebuild still works with routerConfig', (
     WidgetTester tester,
   ) async {
-    Global.profile = models.Profile()..theme = Colors.blue.toARGB32();
+    final models.User user = models.User()..login = 'tester';
+    Global.profile =
+        models.Profile()
+          ..user = user
+          ..theme = Colors.blue.toARGB32();
 
     await tester.pumpWidget(
       const ProviderScope(

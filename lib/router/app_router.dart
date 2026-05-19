@@ -1,4 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:github_client_app/common/global.dart';
 import 'package:github_client_app/routes/demo.dart';
 import 'package:github_client_app/routes/demo/list/demo_list_route.dart';
 import 'package:github_client_app/routes/demo/nested_scroll/demo_nested_scroll_route.dart';
@@ -11,11 +13,23 @@ import 'package:github_client_app/routes/selector_page.dart';
 
 import 'app_route_paths.dart';
 
+/// 在进入 themes 页面前校验登录态。
+///
+/// 当 [Global.profile.user] 为空时，返回登录页路径；否则允许继续进入
+/// 主题切换页。
+String? _redirectThemesIfUnauthenticated(
+  BuildContext context,
+  GoRouterState state,
+) {
+  final bool hasUser = Global.profile.user != null;
+  return hasUser ? null : AppRoutePaths.login;
+}
+
 /// 创建应用级路由配置。
 ///
 /// 该配置统一收口当前项目首页与既有命名路由，作为 go_router 迁移的
-/// 第一阶段基础设施。当前仅做行为等价迁移，不在这里引入鉴权 redirect、
-/// ShellRoute 或类型安全路由生成。
+/// 第一阶段基础设施。当前仅为需要登录的 themes 页面补充最小鉴权
+/// redirect，不在这里引入全局 ShellRoute 或类型安全路由生成。
 GoRouter createAppRouter({String initialLocation = AppRoutePaths.home}) {
   return GoRouter(
     initialLocation: initialLocation,
@@ -30,6 +44,7 @@ GoRouter createAppRouter({String initialLocation = AppRoutePaths.home}) {
       ),
       GoRoute(
         path: AppRoutePaths.themes,
+        redirect: _redirectThemesIfUnauthenticated,
         builder: (context, state) => const ThemeChangeRoute(),
       ),
       GoRoute(
