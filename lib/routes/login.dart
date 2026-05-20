@@ -1,16 +1,31 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/common/funs.dart';
+import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/models/index.dart';
 import 'package:github_client_app/states/profile_state.dart';
+import 'package:github_client_app/widgets/async_elevated_button.dart';
 
 import '../common/git_api.dart';
 import '../common/global.dart';
 
 class LoginRoute extends ConsumerStatefulWidget {
-  const LoginRoute({Key? key}) : super(key: key);
+  /// 创建登录页。
+  ///
+  /// [loginAction] 允许测试或上层注入自定义登录动作；为空时使用默认 GitHub 登录实现。
+  /// [showLoadingIndicator] 表示是否在登录过程中额外展示全局 loading 对话框。
+  const LoginRoute({
+    super.key,
+    this.loginAction,
+    this.showLoadingIndicator = false,
+  });
+
+  /// 自定义登录动作。
+  final Future<User> Function(String username, String password)? loginAction;
+
+  /// 是否额外展示全局 loading 对话框。
+  final bool showLoadingIndicator;
 
   @override
   ConsumerState<LoginRoute> createState() => _LoginRouteState();
@@ -57,9 +72,10 @@ class _LoginRouteState extends ConsumerState<LoginRoute> {
                 autofocus: _nameAutoFocus,
                 controller: _unameController,
                 decoration: InputDecoration(
-                    labelText: l10n.userName,
-                    hintText: l10n.userName,
-                    prefixIcon: const Icon(Icons.person)),
+                  labelText: l10n.userName,
+                  hintText: l10n.userName,
+                  prefixIcon: const Icon(Icons.person),
+                ),
                 // 效验用户名(不能为空)
                 validator: (v) {
                   return v == null || v.trim().isNotEmpty
@@ -68,38 +84,52 @@ class _LoginRouteState extends ConsumerState<LoginRoute> {
                 },
               ),
               TextFormField(
-                  controller: _pwdController,
-                  autofocus: !_nameAutoFocus,
-                  decoration: InputDecoration(
-                    labelText: l10n.password,
-                    hintText: l10n.password,
-                    prefixIcon: const Icon(Icons.lock),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                          pwdShow ? Icons.visibility_off : Icons.visibility),
-                      onPressed: () {
-                        setState(() {
-                          pwdShow = !pwdShow;
-                        });
-                      },
+                controller: _pwdController,
+                autofocus: !_nameAutoFocus,
+                decoration: InputDecoration(
+                  labelText: l10n.password,
+                  hintText: l10n.password,
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      pwdShow ? Icons.visibility_off : Icons.visibility,
                     ),
+                    onPressed: () {
+                      setState(() {
+                        pwdShow = !pwdShow;
+                      });
+                    },
                   ),
-                  obscureText: !pwdShow,
-                  validator: (v) {
-                    return v == null || v.trim().isNotEmpty
-                        ? null
-                        : l10n.passwordRequired;
-                  }),
+                ),
+                obscureText: !pwdShow,
+                validator: (v) {
+                  return v == null || v.trim().isNotEmpty
+                      ? null
+                      : l10n.passwordRequired;
+                },
+              ),
               Padding(
                 padding: const EdgeInsets.only(top: 25),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints.expand(height: 55.0),
-                  child: ElevatedButton(
+                  child: AsyncElevatedButton(
                     onPressed: _onLogin,
+                    loadingChild: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(l10n.login),
+                      ],
+                    ),
                     child: Text(l10n.login),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -107,16 +137,22 @@ class _LoginRouteState extends ConsumerState<LoginRoute> {
     );
   }
 
-  void _onLogin() async {
+  /// 执行登录动作并在成功后更新全局用户信息。
+  ///
+  /// 副作用：会校验表单、按配置展示或隐藏全局 loading，并在登录成功后写入 profile 状态与返回上一页。
+  Future<void> _onLogin() async {
     final l10n = AppLocalizations.of(context);
     final navigator = Navigator.of(context);
     // 先验证各个表单字段是否合法
     if ((_formKey.currentState as FormState).validate()) {
-      // showLoading
-      showLoading(context);
+      if (widget.showLoadingIndicator) {
+        showLoading(context);
+      }
       User? user;
       try {
-        user = await Git().login(_unameController.text, _pwdController.text);
+        final Future<User> Function(String username, String password)
+        loginAction = widget.loginAction ?? Git().login;
+        user = await loginAction(_unameController.text, _pwdController.text);
         // 因为登录返回后，首页会build，所以我们传入false，这样更新user后便不触发更新。
         await ref.read(profileProvider.notifier).updateUser(user);
       } on DioException catch (e) {
@@ -129,7 +165,9 @@ class _LoginRouteState extends ConsumerState<LoginRoute> {
         }
       } finally {
         // 隐藏loading框
-        navigator.pop();
+        if (widget.showLoadingIndicator && navigator.canPop()) {
+          navigator.pop();
+        }
       }
       // 登录成功则返回
       if (user != null) {
