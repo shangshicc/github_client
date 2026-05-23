@@ -24,7 +24,6 @@ class Global {
 
   // 初始化全局变量，会在App启动时执行
   static Future init() async {
-    WidgetsFlutterBinding.ensureInitialized();
     _prefs = await SharedPreferences.getInstance();
     final profileJson = _prefs.getString("profile");
     if (profileJson != null) {
@@ -60,10 +59,11 @@ class Global {
       );
     }
 
-    profile.cache = profile.cache ?? CacheConfig()
-      ..enable = true
-      ..maxAge = 3600
-      ..maxCount = 100;
+    profile.cache =
+        profile.cache ?? CacheConfig()
+          ..enable = true
+          ..maxAge = 3600
+          ..maxCount = 100;
 
     // 初始化网络请求相关配置
     Git.init();

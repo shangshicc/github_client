@@ -34,6 +34,12 @@ class DemoRoute extends StatelessWidget {
             onPressed: () => _openNestedScrollDemo(context),
             child: Text(l10n.demoNestedScroll),
           ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            key: const ValueKey<String>('demo-error-debug-entry'),
+            onPressed: () => _openErrorDebugPage(context),
+            child: const Text('错误调试页'),
+          ),
         ],
       ),
     );
@@ -58,6 +64,11 @@ class DemoRoute extends StatelessWidget {
   /// [context] 表示当前页面上下文，用于执行页面跳转。
   void _openNestedScrollDemo(BuildContext context) {
     context.push(AppRoutePaths.demoNestedScroll);
+  }
+
+  /// 打开错误调试页。
+  void _openErrorDebugPage(BuildContext context) {
+    context.push(AppRoutePaths.errorDebug);
   }
 
   /// 触发当前保留的基础 toast Demo。

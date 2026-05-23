@@ -33,4 +33,10 @@ abstract final class AppRoutePaths {
 
   /// 状态管理 Demo 页路径。
   static const String demoStateManagement = '/demo/state-management';
+
+  /// 全局异常提醒页路径。
+  static const String errorReminder = '/error/reminder';
+
+  /// 错误调试页路径。
+  static const String errorDebug = '/demo/error-debug';
 }

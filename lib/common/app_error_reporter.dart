@@ -8,6 +8,15 @@ import 'log_file_sink.dart';
 import 'logger.dart';
 
 /// 统一描述一条应用级错误记录。
+enum AppErrorPresentationPreference {
+  /// 优先展示统一异常提醒页；失败时再降级为最小兜底 UI。
+  reminderPagePreferred,
+
+  /// 仅展示最小兜底 UI，不尝试导航到统一异常提醒页。
+  fallbackUiOnly,
+}
+
+/// 统一描述一条应用级错误记录。
 class AppErrorRecord {
   /// 创建错误记录。
   ///
@@ -23,6 +32,8 @@ class AppErrorRecord {
     required this.error,
     required this.stackTrace,
     required this.summary,
+    this.presentationPreference =
+        AppErrorPresentationPreference.reminderPagePreferred,
     this.details,
   });
 
@@ -41,6 +52,9 @@ class AppErrorRecord {
   /// 便于快速检索的摘要。
   final String summary;
 
+  /// 建议采用的异常展示策略。
+  final AppErrorPresentationPreference presentationPreference;
+
   /// 补充说明。
   final String? details;
 
@@ -51,6 +65,7 @@ class AppErrorRecord {
       'source': source,
       'error': error.toString(),
       'summary': summary,
+      'presentationPreference': presentationPreference.name,
       'details': details,
       'stackTrace': stackTrace.toString(),
     };
@@ -74,15 +89,18 @@ class AppErrorReporter {
     LogFileSink? fileSink,
     PlatformDispatcher? platformDispatcher,
     void Function(FlutterErrorDetails details)? presentFlutterError,
+    Future<void> Function(AppErrorRecord record)? errorPresentationHandler,
   }) : _logger = logger ?? createLogger('AppErrorReporter'),
        _fileSink = fileSink ?? LogFileSink(),
        _platformDispatcher = platformDispatcher ?? PlatformDispatcher.instance,
-       _presentFlutterError = presentFlutterError ?? FlutterError.presentError;
+       _presentFlutterError = presentFlutterError ?? FlutterError.presentError,
+       _errorPresentationHandler = errorPresentationHandler;
 
   final Logger _logger;
   final LogFileSink _fileSink;
   final PlatformDispatcher _platformDispatcher;
   final void Function(FlutterErrorDetails details) _presentFlutterError;
+  final Future<void> Function(AppErrorRecord record)? _errorPresentationHandler;
 
   FlutterExceptionHandler? _previousFlutterErrorHandler;
   ErrorCallback? _previousPlatformErrorHandler;
@@ -123,11 +141,10 @@ class AppErrorReporter {
   /// 以统一错误保护运行应用启动流程。
   ///
   /// [bootstrap] 表示实际启动逻辑，例如初始化全局状态并调用 runApp。
-  Future<void> run(Future<void> Function() bootstrap) async {
-    install();
+  Future<void> guardBootstrap(Future<void> Function() bootstrap) async {
     final Completer<void> completer = Completer<void>();
 
-    //全局异常捕获方法
+    // 全局异常捕获方法
     runZonedGuarded(
       () async {
         try {
@@ -152,6 +169,15 @@ class AppErrorReporter {
     await completer.future;
   }
 
+  /// 兼容旧调用方式：先安装全局监听，再守护启动流程。
+  ///
+  /// 新代码优先使用 [install] 与 [guardBootstrap] 的两段式调用，
+  /// 以明确区分“全局监听安装”和“启动期 zone 保护”。
+  Future<void> run(Future<void> Function() bootstrap) async {
+    install();
+    await guardBootstrap(bootstrap);
+  }
+
   /// 上报 Flutter 框架层错误。
   Future<void> reportFlutterError(FlutterErrorDetails details) {
     return report(
@@ -161,6 +187,7 @@ class AppErrorReporter {
         error: details.exception,
         stackTrace: details.stack ?? StackTrace.current,
         summary: details.exceptionAsString(),
+        presentationPreference: _resolveFlutterPresentationPreference(details),
         details: _buildFlutterDetails(details),
       ),
     );
@@ -201,7 +228,55 @@ class AppErrorReporter {
       error: record.error,
       stackTrace: record.stackTrace,
     );
-    await _fileSink.write(record);
+    try {
+      await _fileSink.write(record);
+    } catch (error, stackTrace) {
+      _logger.w(
+        '[file-sink] ${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+    unawaited(_presentError(record));
+  }
+
+  Future<void> _presentError(AppErrorRecord record) async {
+    final Future<void> Function(AppErrorRecord record)? handler =
+        _errorPresentationHandler;
+    if (handler == null) {
+      return;
+    }
+
+    try {
+      await handler(record);
+    } catch (error, stackTrace) {
+      _logger.w(
+        '[presentation] ${error.toString()}',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  ///  判断是否是界面展示/渲染的问题
+  AppErrorPresentationPreference _resolveFlutterPresentationPreference(
+    FlutterErrorDetails details,
+  ) {
+    final String library = details.library?.trim().toLowerCase() ?? '';
+    final String context = details.context?.toDescription().toLowerCase() ?? '';
+
+    final bool isWidgetTreeLibrary =
+        library.contains('widgets') || library.contains('rendering');
+    final bool isWidgetTreeContext =
+        context.contains('building') ||
+        context.contains('layout') ||
+        context.contains('paint');
+
+    if (isWidgetTreeLibrary || isWidgetTreeContext) {
+      return AppErrorPresentationPreference.fallbackUiOnly;
+    }
+
+    return AppErrorPresentationPreference.reminderPagePreferred;
   }
 
   String _buildFlutterDetails(FlutterErrorDetails details) {

@@ -5,7 +5,7 @@ import 'package:github_client_app/common/log_file_sink.dart';
 
 void main() {
   test(
-    'AppErrorReporter 安装 FlutterError 钩子时会保留 presentError 并写入 sink',
+    'AppErrorReporter 对 build/render 类 FlutterError 保留 presentError 并标记局部兜底',
     () async {
       final _MemoryLogFileSink sink = _MemoryLogFileSink();
       FlutterErrorDetails? presentedDetails;
@@ -32,15 +32,46 @@ void main() {
       expect(presentedDetails, same(details));
       expect(sink.records, hasLength(1));
       expect(sink.records.single.source, 'flutter');
+      expect(
+        sink.records.single.presentationPreference,
+        AppErrorPresentationPreference.fallbackUiOnly,
+      );
       expect(sink.records.single.details, contains('widgets library'));
     },
   );
 
-  test('AppErrorReporter 通过 runZonedGuarded 归一化 zone 错误', () async {
+  test('AppErrorReporter 对非 build/render 的 FlutterError 保持全局展示优先', () async {
     final _MemoryLogFileSink sink = _MemoryLogFileSink();
     final AppErrorReporter reporter = AppErrorReporter(fileSink: sink);
+    addTearDown(reporter.restore);
 
-    await reporter.run(() async {
+    reporter.install();
+
+    final FlutterErrorDetails details = FlutterErrorDetails(
+      exception: StateError('scheduler failed'),
+      stack: StackTrace.fromString('scheduler-stack'),
+      library: 'scheduler library',
+      context: ErrorDescription('during a scheduler callback'),
+    );
+
+    FlutterError.onError?.call(details);
+    await Future<void>.delayed(Duration.zero);
+
+    expect(sink.records, hasLength(1));
+    expect(sink.records.single.source, 'flutter');
+    expect(
+      sink.records.single.presentationPreference,
+      AppErrorPresentationPreference.reminderPagePreferred,
+    );
+    expect(sink.records.single.details, contains('scheduler library'));
+  });
+
+  test('AppErrorReporter 通过 guardBootstrap 归一化 zone 错误', () async {
+    final _MemoryLogFileSink sink = _MemoryLogFileSink();
+    final AppErrorReporter reporter = AppErrorReporter(fileSink: sink);
+    reporter.install();
+
+    await reporter.guardBootstrap(() async {
       throw StateError('zone failed');
     });
     await Future<void>.delayed(Duration.zero);
@@ -71,6 +102,28 @@ void main() {
       sink.records.single.stackTrace.toString(),
       contains('platform-stack'),
     );
+  });
+
+  test('AppErrorReporter 会在记录后触发展示回调，且展示失败不影响记录', () async {
+    final _MemoryLogFileSink sink = _MemoryLogFileSink();
+    final List<AppErrorRecord> presentedRecords = <AppErrorRecord>[];
+    final AppErrorReporter reporter = AppErrorReporter(
+      fileSink: sink,
+      errorPresentationHandler: (AppErrorRecord record) async {
+        presentedRecords.add(record);
+        throw StateError('presentation failed');
+      },
+    );
+
+    await reporter.reportZoneError(
+      StateError('zone failed for presentation'),
+      StackTrace.fromString('zone-stack'),
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(sink.records, hasLength(1));
+    expect(presentedRecords, hasLength(1));
+    expect(sink.records.single.summary, contains('zone failed'));
   });
 }
 

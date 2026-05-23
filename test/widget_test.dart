@@ -15,6 +15,8 @@ import 'package:github_client_app/routes/demo/list/data/demo_list_repository.dar
 import 'package:github_client_app/routes/demo/list/states/demo_list_controller.dart';
 import 'package:github_client_app/routes/demo/nested_scroll/demo_nested_scroll_route.dart';
 import 'package:github_client_app/routes/demo/state_management_demo_route.dart';
+import 'package:github_client_app/routes/error_debug_route.dart';
+import 'package:github_client_app/routes/error_reminder_page.dart';
 import 'package:github_client_app/routes/detail_page.dart';
 import 'package:github_client_app/routes/home_page.dart';
 import 'package:github_client_app/routes/language.dart';
@@ -89,6 +91,43 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(DetailPage), findsOneWidget);
+  });
+
+  testWidgets('Direct route /error/reminder resolves to ErrorReminderPage', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: _RouteApp(initialLocation: AppRoutePaths.errorReminder),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ErrorReminderPage), findsOneWidget);
+    expect(find.text('应用刚刚发生了异常'), findsOneWidget);
+  });
+
+  testWidgets('Direct route /demo/error-debug resolves to ErrorDebugRoute', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(
+      const ProviderScope(
+        child: _RouteApp(initialLocation: AppRoutePaths.errorDebug),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ErrorDebugRoute), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey<String>('error-debug-local-build-button')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey<String>('error-debug-global-flutter-button')),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
@@ -185,6 +224,16 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byType(DemoNestedScrollRoute), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(find.byType(DemoRoute), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('demo-error-debug-entry')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(ErrorDebugRoute), findsOneWidget);
     },
   );
   testWidgets('Theme rebuild still works with routerConfig', (

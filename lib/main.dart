@@ -4,17 +4,40 @@ import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/router/app_router.dart';
 import 'package:github_client_app/states/profile_state.dart';
 import 'common/app_error_reporter.dart';
+import 'common/app_error_presentation_coordinator.dart';
 import 'common/app_theme.dart';
 import 'common/global.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'common/logger.dart';
+import 'widgets/error_widget_fallback.dart';
 
 final _log = createLogger('AppRoot');
 
 Future<void> main() async {
-  final AppErrorReporter reporter = AppErrorReporter();
-  await reporter.run(() async {
+  // build/render 失败时，仅替换当前出错模块，避免升级为全局宕机态。
+  ErrorWidget.builder = (FlutterErrorDetails _) {
+    return const ErrorWidgetFallback();
+  };
+
+  final AppErrorReporter reporter = AppErrorReporter(
+    errorPresentationHandler: (AppErrorRecord record) async {
+      appErrorPresentationCoordinator?.present(record);
+    },
+  );
+  // 注意：不要在这个 guarded zone 外提前读取 appRouter / coordinator，
+  // 否则会把路由相关初始化放到错误的 zone 中，重新触发 debugCheckZone。
+  // 这里要保证 binding 初始化、路由初始化、启动初始化和 runApp 处于同一个 guarded zone 中。
+  await reporter.guardBootstrap(() async {
+    WidgetsFlutterBinding.ensureInitialized();
+    reporter.install();
+    initializeAppRouter();
+    appErrorPresentationCoordinator = AppErrorPresentationCoordinator(
+      navigate: appRouter.go,
+      currentLocation:
+          // 当前路由栈里，正在显示的页面路径字符串
+          () => appRouter.routerDelegate.currentConfiguration.uri.path,
+    );
     await Global.init();
     runApp(const ProviderScope(child: MyApp()));
   });
@@ -63,6 +86,9 @@ class _AppRoot extends ConsumerWidget {
         //组件文件排列的本地化适配类（ltr/rtl）
         GlobalWidgetsLocalizations.delegate,
       ],
+      // builder: (BuildContext context, Widget? child) {
+      //   return child ?? const SizedBox.shrink();
+      // },
       localeResolutionCallback: (deviceLocale, supportedLocales) {
         // 冷启动app时适配选择的app内语言
         final preferred = locale;
