@@ -5,16 +5,9 @@ import 'package:github_client_app/models/index.dart';
 import 'package:github_client_app/common/logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'app_theme.dart';
 import 'git_api.dart';
 import 'net_cache.dart';
-
-const _themes = <MaterialColor>[
-  Colors.blue,
-  Colors.cyan,
-  Colors.teal,
-  Colors.green,
-  Colors.red,
-];
 
 final _log = createLogger('Global');
 
@@ -25,7 +18,7 @@ class Global {
   static NetCache netCache = NetCache();
 
   // 可选的主题列表
-  static List<MaterialColor> get themes => _themes;
+  static List<MaterialColor> get themes => AppTheme.palettes;
   // 是否为release版
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
 

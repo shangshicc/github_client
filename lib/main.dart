@@ -4,6 +4,7 @@ import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/router/app_router.dart';
 import 'package:github_client_app/states/profile_state.dart';
 import 'common/app_error_reporter.dart';
+import 'common/app_theme.dart';
 import 'common/global.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -16,24 +17,6 @@ Future<void> main() async {
   await reporter.run(() async {
     await Global.init();
     runApp(const ProviderScope(child: MyApp()));
-  });
-}
-
-/// 将主题色卡转换为 MaterialApp 可直接使用的 MaterialColor。
-///
-/// [themeModel] 表示当前选中的主题色卡。
-MaterialColor _materialColorFromSwatch(ColorSwatch themeModel) {
-  return MaterialColor(themeModel.toARGB32(), <int, Color>{
-    50: themeModel[50]!,
-    100: themeModel[100]!,
-    200: themeModel[200]!,
-    300: themeModel[300]!,
-    400: themeModel[400]!,
-    500: themeModel[500]!,
-    600: themeModel[600]!,
-    700: themeModel[700]!,
-    800: themeModel[800]!,
-    900: themeModel[900]!,
   });
 }
 
@@ -63,7 +46,7 @@ class _AppRoot extends ConsumerWidget {
       'locale=${locale?.toString() ?? "system"}',
     );
     return MaterialApp.router(
-      theme: ThemeData(primarySwatch: _materialColorFromSwatch(themeModel)),
+      theme: AppTheme.buildThemeData(themeModel.toARGB32()),
       onGenerateTitle: (context) {
         return AppLocalizations.of(context).title;
       },

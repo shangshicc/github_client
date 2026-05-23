@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:github_client_app/common/global.dart';
+import 'package:github_client_app/common/app_theme.dart';
 import 'package:github_client_app/common/logger.dart';
 import 'package:github_client_app/models/index.dart' as models;
 
@@ -27,10 +27,7 @@ bool isLogin(Ref ref) {
 @riverpod
 MaterialColor theme(Ref ref) {
   final models.Profile profile = ref.watch(profileProvider);
-  final MaterialColor theme = Global.themes.firstWhere(
-    (MaterialColor e) => e.toARGB32() == profile.theme,
-    orElse: () => Colors.blue,
-  );
+  final MaterialColor theme = AppTheme.resolveMaterialColor(profile.theme);
   _log.i(
     'themeProvider resolved, profileTheme=${profile.theme}, '
     'resolvedTheme=${theme.toARGB32()}, hasUser=${profile.user != null}',

@@ -228,5 +228,6 @@
       }
     }
   },
-  "demo": "demo"
+  "demo": "demo",
+  "pressAgainToExit": "Press again to exit the app."
 }

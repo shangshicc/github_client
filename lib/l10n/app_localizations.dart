@@ -325,6 +325,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'demo'**
   String get demo;
+
+  /// No description provided for @pressAgainToExit.
+  ///
+  /// In en, this message translates to:
+  /// **'Press again to exit the app.'**
+  String get pressAgainToExit;
 }
 
 class _AppLocalizationsDelegate

@@ -124,4 +124,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get demo => '样例';
+
+  @override
+  String get pressAgainToExit => '再按一次退出程序';
 }

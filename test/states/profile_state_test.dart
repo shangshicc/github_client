@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:github_client_app/common/app_theme.dart';
 import 'package:github_client_app/common/global.dart';
 import 'package:github_client_app/models/index.dart' as models;
 import 'package:github_client_app/states/profile_state.dart';
@@ -56,6 +57,28 @@ void main() {
     final Map<String, dynamic> decoded =
         jsonDecode(profileJson!) as Map<String, dynamic>;
     expect(decoded['theme'], Colors.red.toARGB32());
+  });
+
+  test('themeProvider 会通过 AppTheme 从 ARGB 值解析主题', () {
+    Global.profile = models.Profile()..theme = Colors.red.toARGB32();
+
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    expect(container.read(themeProvider), Colors.red);
+  });
+
+  test('themeProvider 遇到未知 ARGB 时会回退到默认主题', () {
+    Global.profile = models.Profile()..theme = 123456789;
+
+    final ProviderContainer container = ProviderContainer();
+    addTearDown(container.dispose);
+
+    expect(
+      container.read(themeProvider),
+      AppTheme.resolveMaterialColor(123456789),
+    );
+    expect(container.read(themeProvider), Colors.blue);
   });
 
   test('updateLocale 会同步更新状态、localeProvider 与本地持久化', () async {

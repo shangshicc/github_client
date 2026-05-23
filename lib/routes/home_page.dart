@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart'
     show ConsumerState, ConsumerStatefulWidget, ConsumerWidget, WidgetRef;
@@ -10,13 +11,18 @@ import 'package:github_client_app/models/index.dart';
 import 'package:github_client_app/router/app_route_paths.dart';
 import 'package:github_client_app/states/riverpod/counter_provider.dart';
 import 'package:github_client_app/states/profile_state.dart';
+import '../common/home_back_guard.dart';
 import '../widgets/repo_item.dart';
 import '../common/logger.dart';
 
 final _log = createLogger('HomeRoute');
 
 class HomeRoute extends ConsumerStatefulWidget {
-  const HomeRoute({Key? key}) : super(key: key);
+  const HomeRoute({Key? key, HomeBackGuard? backGuard})
+    : _backGuard = backGuard,
+      super(key: key);
+
+  final HomeBackGuard? _backGuard;
 
   @override
   ConsumerState<HomeRoute> createState() => _HomeRouteState();
@@ -25,34 +31,62 @@ class HomeRoute extends ConsumerStatefulWidget {
 class _HomeRouteState extends ConsumerState<HomeRoute> {
   static const loadingTag = "##loading##"; //表尾标记
   final _items = <Repo>[Repo()..name = loadingTag];
+  late final HomeBackGuard _backGuard;
   bool hasMore = true; //是否还有数据
   int page = 1; //当前请求的是第几页
+
+  @override
+  void initState() {
+    super.initState();
+    _backGuard = widget._backGuard ?? HomeBackGuard();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final int counter = ref.watch(counterProvider);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.home),
-        actions: [
-          Text(
-            'click  $counter',
-            style: const TextStyle(
-              color: Colors.red,
-              fontSize: 18,
-              fontWeight: FontWeight.normal,
+    return PopScope<Object?>(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, Object? result) {
+        if (didPop) {
+          return;
+        }
+        _handleBackPress(l10n.pressAgainToExit);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l10n.home),
+          actions: [
+            Text(
+              'click  $counter',
+              style: const TextStyle(
+                color: Colors.red,
+                fontSize: 18,
+                fontWeight: FontWeight.normal,
+              ),
             ),
-          ),
-        ],
-      ),
-      body: _buildBody(), // 构建主页面
-      drawer: const MyDrawer(), //构建抽屉组件
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.add),
-        onPressed: () => context.push(AppRoutePaths.selector),
+          ],
+        ),
+        body: _buildBody(), // 构建主页面
+        drawer: const MyDrawer(), //构建抽屉组件
+        floatingActionButton: FloatingActionButton(
+          child: const Icon(Icons.add),
+          onPressed: () => context.push(AppRoutePaths.selector),
+        ),
       ),
     );
+  }
+
+  /// 处理首页返回动作：首次提示，窗口内二次触发时退出应用。
+  Future<void> _handleBackPress(String message) async {
+    final HomeBackDecision decision = _backGuard.registerBackAttempt();
+    if (decision == HomeBackDecision.exitApp) {
+      _log.i('HomeRoute back pressed twice within 2 seconds, exiting app');
+      await SystemNavigator.pop();
+      return;
+    }
+    _log.i('HomeRoute intercepted first back press, showing exit hint');
+    showToast(message);
   }
 
   Widget _buildBody() {

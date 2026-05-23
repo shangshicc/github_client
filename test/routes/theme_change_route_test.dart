@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:github_client_app/common/app_theme.dart';
 import 'package:github_client_app/common/global.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/models/profile.dart' as models;
@@ -58,7 +59,7 @@ class _ThemeChangeRouteHarness extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final MaterialColor themeColor = ref.watch(themeProvider);
     return MaterialApp(
-      theme: ThemeData(primarySwatch: themeColor),
+      theme: AppTheme.buildThemeData(themeColor.toARGB32()),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,

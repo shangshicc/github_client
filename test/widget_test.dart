@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:github_client_app/common/global.dart';
+import 'package:github_client_app/common/home_back_guard.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/main.dart';
 import 'package:github_client_app/router/app_route_paths.dart';
@@ -221,6 +223,139 @@ void main() {
     );
     expect(themeMarker.color, Colors.red);
     expect(Global.profile.theme, Colors.red.toARGB32());
+  });
+
+  testWidgets(
+    'HomeRoute first back shows hint and second back exits within window',
+    (WidgetTester tester) async {
+      final List<String> toastMessages = <String>[];
+      int exitCount = 0;
+      DateTime now = DateTime(2026, 5, 23, 12);
+      const MethodChannel toastChannel = MethodChannel(
+        'PonnamKarthik/fluttertoast',
+      );
+
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(toastChannel, (
+            MethodCall methodCall,
+          ) async {
+            if (methodCall.method == 'showToast') {
+              toastMessages.add(methodCall.arguments['msg'] as String);
+            }
+            return true;
+          });
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        (MethodCall methodCall) async {
+          if (methodCall.method == 'SystemNavigator.pop') {
+            exitCount += 1;
+          }
+          return null;
+        },
+      );
+      addTearDown(() async {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(toastChannel, null);
+        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+          SystemChannels.platform,
+          null,
+        );
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          child: MaterialApp(
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+            ],
+            home: HomeRoute(backGuard: HomeBackGuard(now: () => now)),
+          ),
+        ),
+      );
+
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+
+      expect(toastMessages, <String>['Press again to exit the app.']);
+      await tester.pump(const Duration(seconds: 1));
+      expect(exitCount, 0);
+
+      now = now.add(const Duration(seconds: 1));
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+
+      expect(exitCount, 1);
+    },
+  );
+
+  testWidgets('HomeRoute back hint expires after 2 seconds', (
+    WidgetTester tester,
+  ) async {
+    final List<String> toastMessages = <String>[];
+    int exitCount = 0;
+    DateTime now = DateTime(2026, 5, 23, 12);
+    const MethodChannel toastChannel = MethodChannel(
+      'PonnamKarthik/fluttertoast',
+    );
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(toastChannel, (MethodCall methodCall) async {
+          if (methodCall.method == 'showToast') {
+            toastMessages.add(methodCall.arguments['msg'] as String);
+          }
+          return true;
+        });
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (MethodCall methodCall) async {
+        if (methodCall.method == 'SystemNavigator.pop') {
+          exitCount += 1;
+        }
+        return null;
+      },
+    );
+    addTearDown(() async {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(toastChannel, null);
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      );
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp(
+          supportedLocales: AppLocalizations.supportedLocales,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+          ],
+          home: HomeRoute(backGuard: HomeBackGuard(now: () => now)),
+        ),
+      ),
+    );
+
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    now = now.add(const Duration(seconds: 3));
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    expect(toastMessages, <String>[
+      'Press again to exit the app.',
+      'Press again to exit the app.',
+    ]);
+    expect(exitCount, 0);
   });
 
   testWidgets('Locale rebuild still works with routerConfig', (

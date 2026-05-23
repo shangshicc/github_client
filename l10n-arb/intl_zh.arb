@@ -211,5 +211,6 @@
       }
     }
   },
-  "demo": "样例"
+  "demo": "样例",
+  "pressAgainToExit": "再按一次退出程序"
 }

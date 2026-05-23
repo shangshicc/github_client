@@ -124,4 +124,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get demo => 'demo';
+
+  @override
+  String get pressAgainToExit => 'Press again to exit the app.';
 }

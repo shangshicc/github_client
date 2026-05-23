@@ -4,6 +4,9 @@ import 'dart:io';
 import 'app_error_reporter.dart';
 
 /// 将错误记录追加写入本地日志文件。
+///
+/// 默认落到系统临时目录，仅用于当前阶段的本地调试/学习日志；目录内容可能被
+/// 系统回收，不承诺长期持久化。
 class LogFileSink {
   /// 创建日志文件落盘对象。
   ///

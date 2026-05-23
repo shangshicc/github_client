@@ -58,6 +58,10 @@ class AppErrorRecord {
 }
 
 /// 负责接入 Flutter/Dart 层的全局异常入口并统一分发。
+///
+/// 当前仅覆盖 FlutterError、runZonedGuarded 与 root isolate 的
+/// PlatformDispatcher.onError，不覆盖原生 crash 深度采集，也不会自动接管
+/// 非 root isolate 的未处理异常。
 class AppErrorReporter {
   /// 创建错误上报器。
   ///
