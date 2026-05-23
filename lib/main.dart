@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/router/app_router.dart';
 import 'package:github_client_app/states/profile_state.dart';
+import 'common/app_error_reporter.dart';
 import 'common/global.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
@@ -10,8 +11,12 @@ import 'common/logger.dart';
 
 final _log = createLogger('AppRoot');
 
-void main() async {
-  Global.init().then((e) => runApp(const ProviderScope(child: MyApp())));
+Future<void> main() async {
+  final AppErrorReporter reporter = AppErrorReporter();
+  await reporter.run(() async {
+    await Global.init();
+    runApp(const ProviderScope(child: MyApp()));
+  });
 }
 
 /// 将主题色卡转换为 MaterialApp 可直接使用的 MaterialColor。
