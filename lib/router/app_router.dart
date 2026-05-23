@@ -4,6 +4,7 @@ import 'package:github_client_app/common/global.dart';
 import 'package:github_client_app/routes/demo.dart';
 import 'package:github_client_app/routes/demo/list/demo_list_route.dart';
 import 'package:github_client_app/routes/demo/nested_scroll/demo_nested_scroll_route.dart';
+import 'package:github_client_app/routes/demo/state_management_demo_route.dart';
 import 'package:github_client_app/routes/home_page.dart';
 import 'package:github_client_app/routes/language.dart';
 import 'package:github_client_app/routes/login.dart';
@@ -70,6 +71,10 @@ GoRouter createAppRouter({String initialLocation = AppRoutePaths.home}) {
       GoRoute(
         path: AppRoutePaths.demoNestedScroll,
         builder: (context, state) => const DemoNestedScrollRoute(),
+      ),
+      GoRoute(
+        path: AppRoutePaths.demoStateManagement,
+        builder: (context, state) => const StateManagementDemoRoute(),
       ),
     ],
   );

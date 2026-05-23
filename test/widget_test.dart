@@ -12,6 +12,7 @@ import 'package:github_client_app/routes/demo/list/demo_list_route.dart';
 import 'package:github_client_app/routes/demo/list/data/demo_list_repository.dart';
 import 'package:github_client_app/routes/demo/list/states/demo_list_controller.dart';
 import 'package:github_client_app/routes/demo/nested_scroll/demo_nested_scroll_route.dart';
+import 'package:github_client_app/routes/demo/state_management_demo_route.dart';
 import 'package:github_client_app/routes/detail_page.dart';
 import 'package:github_client_app/routes/home_page.dart';
 import 'package:github_client_app/routes/language.dart';
@@ -137,38 +138,53 @@ void main() {
     expect(find.byType(ThemeChangeRoute), findsNothing);
   });
 
-  testWidgets('Demo -> demo list / nested scroll and back stack', (
-    WidgetTester tester,
-  ) async {
-    await tester.binding.setSurfaceSize(const Size(1024, 1600));
-    addTearDown(() async {
-      await tester.binding.setSurfaceSize(null);
-    });
+  testWidgets(
+    'Demo -> state management / demo list / nested scroll and back stack',
+    (WidgetTester tester) async {
+      await tester.binding.setSurfaceSize(const Size(1024, 1600));
+      addTearDown(() async {
+        await tester.binding.setSurfaceSize(null);
+      });
 
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [
-          demoListRepositoryProvider.overrideWithValue(
-            _FakeDemoListRepository(
-              repos: <models.Repo>[_buildRepo(id: 1, name: 'repo-1')],
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            demoListRepositoryProvider.overrideWithValue(
+              _FakeDemoListRepository(
+                repos: <models.Repo>[_buildRepo(id: 1, name: 'repo-1')],
+              ),
             ),
-          ),
-        ],
-        child: const _RouteApp(initialLocation: AppRoutePaths.demo),
-      ),
-    );
+          ],
+          child: const _RouteApp(initialLocation: AppRoutePaths.demo),
+        ),
+      );
 
-    await tester.tap(find.byType(ElevatedButton).at(1));
-    await tester.pumpAndSettle();
-    expect(find.byType(DemoListRoute), findsOneWidget);
-    await tester.pageBack();
-    await tester.pumpAndSettle();
-    expect(find.byType(DemoRoute), findsOneWidget);
+      await tester.tap(
+        find.byKey(const ValueKey<String>('demo-state-management-entry')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(StateManagementDemoRoute), findsOneWidget);
+      expect(find.text('Demo 1：父组件管理子组件状态'), findsOneWidget);
+      expect(find.text('Demo 2：子组件管理内部状态，父组件管理外部状态'), findsOneWidget);
 
-    await tester.tap(find.byType(ElevatedButton).at(2));
-    await tester.pumpAndSettle();
-    expect(find.byType(DemoNestedScrollRoute), findsOneWidget);
-  });
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(find.byType(DemoRoute), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey<String>('demo-list-entry')));
+      await tester.pumpAndSettle();
+      expect(find.byType(DemoListRoute), findsOneWidget);
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+      expect(find.byType(DemoRoute), findsOneWidget);
+
+      await tester.tap(
+        find.byKey(const ValueKey<String>('demo-nested-scroll-entry')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(DemoNestedScrollRoute), findsOneWidget);
+    },
+  );
   testWidgets('Theme rebuild still works with routerConfig', (
     WidgetTester tester,
   ) async {

@@ -9,30 +9,41 @@ class DemoRoute extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 运行时常量
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.demo),
-      ),
+      appBar: AppBar(title: Text(l10n.demo)),
       body: ListView(
-        children: [
-          Column(
-            children: [
-              ElevatedButton(onPressed: onPressed, child: Text(l10n.demo)),
-              ElevatedButton(
-                onPressed: () => _openListDemo(context),
-                child: Text(l10n.demoList),
-              ),
-              ElevatedButton(
-                onPressed: () => _openNestedScrollDemo(context),
-                child: Text(l10n.demoNestedScroll),
-              ),
-            ],
+        padding: const EdgeInsets.all(16),
+        children: <Widget>[
+          ElevatedButton(onPressed: onPressed, child: Text(l10n.demo)),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            key: const ValueKey<String>('demo-state-management-entry'),
+            onPressed: () => _openStateManagementDemo(context),
+            child: const Text('State Management Demo'),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            key: const ValueKey<String>('demo-list-entry'),
+            onPressed: () => _openListDemo(context),
+            child: Text(l10n.demoList),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            key: const ValueKey<String>('demo-nested-scroll-entry'),
+            onPressed: () => _openNestedScrollDemo(context),
+            child: Text(l10n.demoNestedScroll),
           ),
         ],
       ),
     );
+  }
+
+  /// 打开状态管理 Demo 页面。
+  ///
+  /// [context] 表示当前页面上下文，用于执行页面跳转。
+  void _openStateManagementDemo(BuildContext context) {
+    context.push(AppRoutePaths.demoStateManagement);
   }
 
   /// 打开多类型列表 Demo 页面。
@@ -49,7 +60,8 @@ class DemoRoute extends StatelessWidget {
     context.push(AppRoutePaths.demoNestedScroll);
   }
 
+  /// 触发当前保留的基础 toast Demo。
   void onPressed() {
-    showToast("test");
+    showToast('test');
   }
 }

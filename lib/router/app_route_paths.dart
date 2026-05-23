@@ -30,4 +30,7 @@ abstract final class AppRoutePaths {
 
   /// Demo NestedScroll 页路径。
   static const String demoNestedScroll = '/demo/nested-scroll';
+
+  /// 状态管理 Demo 页路径。
+  static const String demoStateManagement = '/demo/state-management';
 }
