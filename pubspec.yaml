@@ -78,6 +78,7 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  #允许 Flutter 在构建时运行它自己的代码生成流程，并把生成结果接入项目。
   generate: true
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in

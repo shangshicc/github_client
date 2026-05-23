@@ -76,10 +76,13 @@ class _AppRoot extends ConsumerWidget {
         GlobalWidgetsLocalizations.delegate,
       ],
       localeResolutionCallback: (deviceLocale, supportedLocales) {
+        // 冷启动app时适配选择的app内语言
         final preferred = locale;
+        // 手动选择语言时，preferred不为null
         if (preferred != null) return preferred;
 
         if (deviceLocale == null) {
+          // 用户没有选择语言，和系统语言保持一致
           return supportedLocales.firstWhere(
             (l) => l.languageCode == 'en',
             orElse: () => supportedLocales.first,
