@@ -24,6 +24,12 @@ class DemoRoute extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ElevatedButton(
+            key: const ValueKey<String>('demo-lifecycle-entry'),
+            onPressed: () => _openLifecycleDemo(context),
+            child: const Text('生命周期 Demo'),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
             key: const ValueKey<String>('demo-list-entry'),
             onPressed: () => _openListDemo(context),
             child: Text(l10n.demoList),
@@ -50,6 +56,13 @@ class DemoRoute extends StatelessWidget {
   /// [context] 表示当前页面上下文，用于执行页面跳转。
   void _openStateManagementDemo(BuildContext context) {
     context.push(AppRoutePaths.demoStateManagement);
+  }
+
+  /// 打开生命周期 Demo 页面。
+  ///
+  /// [context] 表示当前页面上下文，用于执行页面跳转。
+  void _openLifecycleDemo(BuildContext context) {
+    context.push(AppRoutePaths.demoLifecycle);
   }
 
   /// 打开多类型列表 Demo 页面。
