@@ -19,28 +19,33 @@ void main() {
     Global.profile =
         models.Profile()
           ..theme = Colors.blue.toARGB32()
+          ..skinId = 'default'
+          ..themeMode = 'dark'
           ..locale = 'zh';
   });
 
-  testWidgets('ThemeChangeRoute 点击主题后会驱动根部主题刷新', (WidgetTester tester) async {
+  testWidgets('ThemeChangeRoute 仅展示皮肤选择并驱动根部主题刷新', (WidgetTester tester) async {
     await tester.pumpWidget(
       const ProviderScope(child: _ThemeChangeRouteHarness()),
     );
+
+    expect(find.text('跟随系统'), findsNothing);
+    expect(find.text('浅色模式'), findsNothing);
+    expect(find.text('深色模式'), findsNothing);
 
     Container themeMarker = tester.widget<Container>(
       find.byKey(const ValueKey<String>('theme-marker')),
     );
     expect(themeMarker.color, Colors.blue);
 
-    final Finder redThemeItem = find.descendant(
-      of: find.byType(GestureDetector),
-      matching: find.byWidgetPredicate(
-        (Widget widget) => widget is Container && widget.color == Colors.red,
-      ),
+    final Finder redThemeItem = find.byKey(
+      const ValueKey<String>('skin-sunset'),
     );
 
     expect(redThemeItem, findsOneWidget);
-    await tester.tap(redThemeItem);
+    await tester.ensureVisible(redThemeItem);
+    await tester.pumpAndSettle();
+    await tester.tap(redThemeItem, warnIfMissed: false);
     await tester.pump();
     await tester.pump();
 
@@ -49,6 +54,8 @@ void main() {
     );
     expect(themeMarker.color, Colors.red);
     expect(Global.profile.theme, Colors.red.toARGB32());
+    expect(Global.profile.skinId, 'sunset');
+    expect(Global.profile.themeMode, 'dark');
   });
 }
 
@@ -57,9 +64,12 @@ class _ThemeChangeRouteHarness extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final AppSkin skin = ref.watch(skinProvider);
     final MaterialColor themeColor = ref.watch(themeProvider);
     return MaterialApp(
-      theme: AppTheme.buildThemeData(themeColor.toARGB32()),
+      theme: AppTheme.buildLightThemeDataBySkin(skin),
+      darkTheme: AppTheme.buildDarkThemeDataBySkin(skin),
+      themeMode: ThemeMode.system,
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -67,18 +77,29 @@ class _ThemeChangeRouteHarness extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
       ],
-      home: Scaffold(
-        body: Column(
-          children: <Widget>[
-            Container(
-              key: const ValueKey<String>('theme-marker'),
-              color: themeColor,
-              width: 12,
-              height: 12,
+      home: Stack(
+        children: <Widget>[
+          const ThemeChangeRoute(),
+          Positioned(
+            top: 12,
+            left: 12,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Container(
+                  key: const ValueKey<String>('theme-marker'),
+                  color: themeColor,
+                  width: 12,
+                  height: 12,
+                ),
+                const Text(
+                  'system',
+                  key: ValueKey<String>('theme-mode-marker'),
+                ),
+              ],
             ),
-            const Expanded(child: ThemeChangeRoute()),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

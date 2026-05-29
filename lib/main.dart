@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/router/app_router.dart';
 import 'package:github_client_app/states/profile_state.dart';
 import 'common/app_error_reporter.dart';
+import 'common/app_orientation_policy.dart';
 import 'common/app_error_presentation_coordinator.dart';
 import 'common/app_theme.dart';
 import 'common/global.dart';
@@ -14,33 +16,59 @@ import 'widgets/error_widget_fallback.dart';
 
 final _log = createLogger('AppRoot');
 
+typedef AppOrientationCoordinatorFactory = AppOrientationCoordinator Function();
+
+AppOrientationCoordinatorFactory createAppOrientationCoordinator =
+    () => AppOrientationCoordinator();
+
 Future<void> main() async {
   // build/render 失败时，仅替换当前出错模块，避免升级为全局宕机态。
   ErrorWidget.builder = (FlutterErrorDetails _) {
     return const ErrorWidgetFallback();
   };
 
-  final AppErrorReporter reporter = AppErrorReporter(
-    errorPresentationHandler: (AppErrorRecord record) async {
-      appErrorPresentationCoordinator?.present(record);
-    },
-  );
+  await bootstrapApp();
+}
+
+@visibleForTesting
+Future<void> bootstrapApp({
+  AppErrorReporter? reporter,
+  Future<void> Function()? globalInitializer,
+  void Function()? routerInitializer,
+  void Function()? presentationCoordinatorInitializer,
+  void Function(Widget app)? appRunner,
+}) async {
+  final AppErrorReporter effectiveReporter =
+      reporter ??
+      AppErrorReporter(
+        errorPresentationHandler: (AppErrorRecord record) async {
+          appErrorPresentationCoordinator?.present(record);
+        },
+      );
   // 注意：不要在这个 guarded zone 外提前读取 appRouter / coordinator，
   // 否则会把路由相关初始化放到错误的 zone 中，重新触发 debugCheckZone。
   // 这里要保证 binding 初始化、路由初始化、启动初始化和 runApp 处于同一个 guarded zone 中。
-  await reporter.guardBootstrap(() async {
+  await effectiveReporter.guardBootstrap(() async {
     WidgetsFlutterBinding.ensureInitialized();
-    reporter.install();
-    initializeAppRouter();
-    appErrorPresentationCoordinator = AppErrorPresentationCoordinator(
-      navigate: appRouter.go,
-      currentLocation:
-          // 当前路由栈里，正在显示的页面路径字符串
-          () => appRouter.routerDelegate.currentConfiguration.uri.path,
-    );
-    await Global.init();
-    runApp(const ProviderScope(child: MyApp()));
+    final AppOrientationCoordinator orientationCoordinator =
+        createAppOrientationCoordinator();
+    effectiveReporter.install();
+    await orientationCoordinator.start();
+    (routerInitializer ?? initializeAppRouter)();
+    (presentationCoordinatorInitializer ??
+        _initializeAppErrorPresentationCoordinator)();
+    await (globalInitializer ?? Global.init)();
+    (appRunner ?? runApp)(const ProviderScope(child: MyApp()));
   });
+}
+
+void _initializeAppErrorPresentationCoordinator() {
+  appErrorPresentationCoordinator = AppErrorPresentationCoordinator(
+    navigate: appRouter.go,
+    currentLocation:
+        // 当前路由栈里，正在显示的页面路径字符串
+        () => appRouter.routerDelegate.currentConfiguration.uri.path,
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -62,14 +90,16 @@ class _AppRoot extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final MaterialColor themeModel = ref.watch(themeProvider);
+    final AppSkin skin = ref.watch(skinProvider);
     final Locale? locale = ref.watch(localeProvider);
     _log.i(
-      '_AppRoot build, theme=${themeModel.toARGB32()}, '
-      'locale=${locale?.toString() ?? "system"}',
+      '_AppRoot build, skin=${skin.id}, theme=${skin.swatch.toARGB32()}, '
+      'themeMode=${ThemeMode.system}, locale=${locale?.toString() ?? "system"}',
     );
     return MaterialApp.router(
-      theme: AppTheme.buildThemeData(themeModel.toARGB32()),
+      theme: AppTheme.buildLightThemeDataBySkin(skin),
+      darkTheme: AppTheme.buildDarkThemeDataBySkin(skin),
+      themeMode: ThemeMode.system,
       onGenerateTitle: (context) {
         return AppLocalizations.of(context).title;
       },
@@ -86,9 +116,6 @@ class _AppRoot extends ConsumerWidget {
         //组件文件排列的本地化适配类（ltr/rtl）
         GlobalWidgetsLocalizations.delegate,
       ],
-      // builder: (BuildContext context, Widget? child) {
-      //   return child ?? const SizedBox.shrink();
-      // },
       localeResolutionCallback: (deviceLocale, supportedLocales) {
         // 冷启动app时适配选择的app内语言
         final preferred = locale;

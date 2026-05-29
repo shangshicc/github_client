@@ -52,7 +52,7 @@ final class ProfileProvider extends $NotifierProvider<Profile, models.Profile> {
   }
 }
 
-String _$profileHash() => r'1c5142615ff95e1b71fbe5db55d78dffe9455d65';
+String _$profileHash() => r'fa35d4d4f390d357f51fd9097d00f5d5f140f993';
 
 /// Profile 的 Riverpod 状态控制器。
 ///

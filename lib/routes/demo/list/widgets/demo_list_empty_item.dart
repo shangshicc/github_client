@@ -23,6 +23,8 @@ class DemoListEmptyItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -32,15 +34,10 @@ class DemoListEmptyItem extends StatelessWidget {
             Icon(
               Icons.inbox_outlined,
               size: 56,
-              color: Colors.grey[400],
+              color: colorScheme.onSurfaceVariant,
             ),
             const SizedBox(height: 16),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Colors.grey[700],
-                  ),
-            ),
+            Text(message, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: onRefresh,

@@ -23,16 +23,34 @@ bool isLogin(Ref ref) {
   return ref.watch(userProvider) != null;
 }
 
+/// 提供当前皮肤定义。
+@riverpod
+AppSkin skin(Ref ref) {
+  final models.Profile profile = ref.watch(profileProvider);
+  final AppSkin resolvedSkin = AppTheme.resolveSkin(
+    profile.skinId,
+    legacyArgb: profile.theme,
+  );
+  _log.i(
+    'skinProvider resolved, profileSkinId=${profile.skinId ?? "null"}, '
+    'profileTheme=${profile.theme}, resolvedSkin=${resolvedSkin.id}, '
+    'hasUser=${profile.user != null}',
+  );
+  return resolvedSkin;
+}
+
 /// 提供当前主题色。
+///
+/// 保留该 provider 以兼容仍依赖主色板的旧页面；新逻辑优先使用 [skinProvider]
+/// 或 `Theme.of(context).colorScheme`。
 @riverpod
 MaterialColor theme(Ref ref) {
-  final models.Profile profile = ref.watch(profileProvider);
-  final MaterialColor theme = AppTheme.resolveMaterialColor(profile.theme);
+  final AppSkin currentSkin = ref.watch(skinProvider);
   _log.i(
-    'themeProvider resolved, profileTheme=${profile.theme}, '
-    'resolvedTheme=${theme.toARGB32()}, hasUser=${profile.user != null}',
+    'themeProvider resolved from skin=${currentSkin.id}, '
+    'swatch=${currentSkin.swatch.toARGB32()}',
   );
-  return theme;
+  return currentSkin.swatch;
 }
 
 /// 提供当前语言标识。

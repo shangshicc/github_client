@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:github_client_app/common/app_theme.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/states/profile_state.dart';
-import '../common/app_theme.dart';
+
 import '../common/logger.dart';
 
 final _log = createLogger('ThemeChangeRoute');
@@ -12,26 +13,30 @@ class ThemeChangeRoute extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
+    final AppLocalizations l10n = AppLocalizations.of(context);
+    final AppSkin currentSkin = ref.watch(skinProvider);
+    final Color selectedColor = Theme.of(context).colorScheme.primary;
+
     return Scaffold(
       appBar: AppBar(title: Text(l10n.theme)),
       body: ListView(
-        children:
-            AppTheme.palettes.map((e) {
-              return GestureDetector(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 5,
-                    horizontal: 10,
-                  ),
-                  child: Container(color: e, height: 40),
-                ),
-                onTap: () {
-                  _log.i('Theme selected, swatch=${e.toARGB32()}');
-                  ref.read(profileProvider.notifier).updateTheme(e);
-                },
-              );
-            }).toList(),
+        children: <Widget>[
+          ListTile(title: Text(l10n.theme)),
+          ...AppTheme.skins.map((AppSkin skin) {
+            final bool selected = currentSkin.id == skin.id;
+            return ListTile(
+              key: ValueKey<String>('skin-${skin.id}'),
+              leading: CircleAvatar(backgroundColor: skin.swatch),
+              title: Text(skin.label),
+              trailing:
+                  selected ? Icon(Icons.done, color: selectedColor) : null,
+              onTap: () {
+                _log.i('Skin selected, skin=${skin.id}');
+                ref.read(profileProvider.notifier).updateSkin(skin.id);
+              },
+            );
+          }),
+        ],
       ),
     );
   }

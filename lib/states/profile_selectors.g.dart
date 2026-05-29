@@ -99,17 +99,71 @@ final class IsLoginProvider extends $FunctionalProvider<bool, bool, bool>
 
 String _$isLoginHash() => r'15c34326049e9b7847078b49d09b569dba1c2c12';
 
+/// 提供当前皮肤定义。
+
+@ProviderFor(skin)
+final skinProvider = SkinProvider._();
+
+/// 提供当前皮肤定义。
+
+final class SkinProvider extends $FunctionalProvider<AppSkin, AppSkin, AppSkin>
+    with $Provider<AppSkin> {
+  /// 提供当前皮肤定义。
+  SkinProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'skinProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$skinHash();
+
+  @$internal
+  @override
+  $ProviderElement<AppSkin> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  AppSkin create(Ref ref) {
+    return skin(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(AppSkin value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AppSkin>(value),
+    );
+  }
+}
+
+String _$skinHash() => r'b9863dd5057ca05dc9d09dbca088dc08da17da19';
+
 /// 提供当前主题色。
+///
+/// 保留该 provider 以兼容仍依赖主色板的旧页面；新逻辑优先使用 [skinProvider]
+/// 或 `Theme.of(context).colorScheme`。
 
 @ProviderFor(theme)
 final themeProvider = ThemeProvider._();
 
 /// 提供当前主题色。
+///
+/// 保留该 provider 以兼容仍依赖主色板的旧页面；新逻辑优先使用 [skinProvider]
+/// 或 `Theme.of(context).colorScheme`。
 
 final class ThemeProvider
     extends $FunctionalProvider<MaterialColor, MaterialColor, MaterialColor>
     with $Provider<MaterialColor> {
   /// 提供当前主题色。
+  ///
+  /// 保留该 provider 以兼容仍依赖主色板的旧页面；新逻辑优先使用 [skinProvider]
+  /// 或 `Theme.of(context).colorScheme`。
   ThemeProvider._()
     : super(
         from: null,
@@ -143,7 +197,7 @@ final class ThemeProvider
   }
 }
 
-String _$themeHash() => r'716f3c84fa925f35b1ac762add32fae2b2ae18b9';
+String _$themeHash() => r'0a2a51a7350c7427551a07f483572cd263fae36c';
 
 /// 提供当前语言标识。
 

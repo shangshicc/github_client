@@ -49,6 +49,8 @@ models.Profile cloneProfile(models.Profile source) {
             : models.User.fromJson(json['user'] as Map<String, dynamic>)
     ..token = json['token'] as String?
     ..theme = json['theme'] as num
+    ..skinId = json['skinId'] as String?
+    ..themeMode = json['themeMode'] as String?
     ..cache =
         json['cache'] == null
             ? null

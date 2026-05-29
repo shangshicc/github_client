@@ -43,7 +43,8 @@ class DemoListLoadingItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Center(
+    final TextStyle? messageStyle = Theme.of(context).textTheme.bodyMedium;
+    final Widget content = Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -55,9 +56,7 @@ class DemoListLoadingItem extends StatelessWidget {
           SizedBox(height: spacing),
           Text(
             message ?? AppLocalizations.of(context).demoListLoading,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[700],
-                ),
+            style: messageStyle,
           ),
         ],
       ),

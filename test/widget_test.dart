@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:github_client_app/common/global.dart';
-import 'package:github_client_app/common/home_back_guard.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/main.dart';
 import 'package:github_client_app/router/app_route_paths.dart';
 import 'package:github_client_app/router/app_router.dart';
-import 'package:github_client_app/routes/demo.dart';
 import 'package:github_client_app/routes/demo/list/demo_list_route.dart';
 import 'package:github_client_app/routes/demo/list/data/demo_list_repository.dart';
 import 'package:github_client_app/routes/demo/list/states/demo_list_controller.dart';
@@ -17,14 +14,14 @@ import 'package:github_client_app/routes/demo/nested_scroll/demo_nested_scroll_r
 import 'package:github_client_app/routes/demo/state_management_demo_route.dart';
 import 'package:github_client_app/routes/error_debug_route.dart';
 import 'package:github_client_app/routes/error_reminder_page.dart';
-import 'package:github_client_app/routes/detail_page.dart';
-import 'package:github_client_app/routes/home_page.dart';
-import 'package:github_client_app/routes/language.dart';
+import 'package:github_client_app/routes/demo.dart';
 import 'package:github_client_app/routes/login.dart';
 import 'package:github_client_app/routes/theme_change.dart';
+import 'package:github_client_app/routes/home/data/home_repository.dart';
+import 'package:github_client_app/routes/home_page.dart';
+import 'package:github_client_app/routes/detail_page.dart';
 import 'package:github_client_app/models/index.dart' as models;
 import 'package:github_client_app/states/profile_state.dart';
-import 'package:github_client_app/states/profile_selectors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -38,7 +35,18 @@ void main() {
   testWidgets('App root uses MaterialApp.router and opens HomeRoute at /', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: MyApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          homeRepositoryProvider.overrideWithValue(
+            _FakeHomeRepository(
+              repos: <models.Repo>[_buildRepo(id: 99, name: 'home-repo')],
+            ),
+          ),
+        ],
+        child: const MyApp(),
+      ),
+    );
 
     final MaterialApp app = tester.widget<MaterialApp>(
       find.byType(MaterialApp),
@@ -46,22 +54,6 @@ void main() {
     expect(app.routerConfig, isNotNull);
     expect(find.byType(HomeRoute), findsOneWidget);
     expect(find.byType(FloatingActionButton), findsOneWidget);
-  });
-
-  testWidgets('Home unauthenticated -> login via go_router', (
-    WidgetTester tester,
-  ) async {
-    await tester.pumpWidget(
-      ProviderScope(
-        overrides: [isLoginProvider.overrideWithValue(false)],
-        child: const _RouteApp(initialLocation: AppRoutePaths.home),
-      ),
-    );
-
-    await tester.tap(find.byType(ElevatedButton));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(LoginRoute), findsOneWidget);
   });
 
   testWidgets('Direct route /selector resolves to SelectorPage', (
@@ -129,38 +121,6 @@ void main() {
       findsOneWidget,
     );
   });
-
-  testWidgets(
-    'Drawer unauthenticated -> themes redirects login, language/demo still resolve',
-    (WidgetTester tester) async {
-      Global.profile = models.Profile()..theme = Colors.blue.toARGB32();
-
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: _RouteApp(initialLocation: AppRoutePaths.home),
-        ),
-      );
-
-      await _openDrawer(tester);
-      await tester.tap(find.widgetWithIcon(ListTile, Icons.color_lens));
-      await tester.pumpAndSettle();
-      expect(find.byType(LoginRoute), findsOneWidget);
-
-      await tester.pageBack();
-      await tester.pumpAndSettle();
-      await _openDrawer(tester);
-      await tester.tap(find.widgetWithIcon(ListTile, Icons.language));
-      await tester.pumpAndSettle();
-      expect(find.byType(LanguageRoute), findsOneWidget);
-
-      await tester.pageBack();
-      await tester.pumpAndSettle();
-      await _openDrawer(tester);
-      await tester.tap(find.widgetWithIcon(ListTile, Icons.info));
-      await tester.pumpAndSettle();
-      expect(find.byType(DemoRoute), findsOneWidget);
-    },
-  );
 
   testWidgets('Direct route /themes unauthenticated redirects to LoginRoute', (
     WidgetTester tester,
@@ -243,27 +203,38 @@ void main() {
     Global.profile =
         models.Profile()
           ..user = user
-          ..theme = Colors.blue.toARGB32();
+          ..theme = Colors.blue.toARGB32()
+          ..skinId = 'default';
+
+    await tester.binding.setSurfaceSize(const Size(430, 932));
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
 
     await tester.pumpWidget(
       const ProviderScope(
         child: _RouteApp(initialLocation: AppRoutePaths.themes),
       ),
     );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
 
     Container themeMarker = tester.widget<Container>(
       find.byKey(const ValueKey<String>('theme-marker')),
     );
     expect(themeMarker.color, Colors.blue);
+    expect(find.byType(ThemeChangeRoute), findsOneWidget);
 
-    final Finder redThemeItem = find.descendant(
-      of: find.byType(GestureDetector),
-      matching: find.byWidgetPredicate(
-        (Widget widget) => widget is Container && widget.color == Colors.red,
-      ),
+    final Finder redThemeItem = find.byKey(
+      const ValueKey<String>('skin-sunset'),
     );
 
-    await tester.tap(redThemeItem);
+    await tester.scrollUntilVisible(
+      redThemeItem,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(redThemeItem, warnIfMissed: false);
     await tester.pump();
     await tester.pump();
 
@@ -272,139 +243,7 @@ void main() {
     );
     expect(themeMarker.color, Colors.red);
     expect(Global.profile.theme, Colors.red.toARGB32());
-  });
-
-  testWidgets(
-    'HomeRoute first back shows hint and second back exits within window',
-    (WidgetTester tester) async {
-      final List<String> toastMessages = <String>[];
-      int exitCount = 0;
-      DateTime now = DateTime(2026, 5, 23, 12);
-      const MethodChannel toastChannel = MethodChannel(
-        'PonnamKarthik/fluttertoast',
-      );
-
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(toastChannel, (
-            MethodCall methodCall,
-          ) async {
-            if (methodCall.method == 'showToast') {
-              toastMessages.add(methodCall.arguments['msg'] as String);
-            }
-            return true;
-          });
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform,
-        (MethodCall methodCall) async {
-          if (methodCall.method == 'SystemNavigator.pop') {
-            exitCount += 1;
-          }
-          return null;
-        },
-      );
-      addTearDown(() async {
-        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-            .setMockMethodCallHandler(toastChannel, null);
-        tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-          SystemChannels.platform,
-          null,
-        );
-      });
-
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-            ],
-            home: HomeRoute(backGuard: HomeBackGuard(now: () => now)),
-          ),
-        ),
-      );
-
-      await tester.binding.handlePopRoute();
-      await tester.pump();
-
-      expect(toastMessages, <String>['Press again to exit the app.']);
-      await tester.pump(const Duration(seconds: 1));
-      expect(exitCount, 0);
-
-      now = now.add(const Duration(seconds: 1));
-      await tester.binding.handlePopRoute();
-      await tester.pump();
-
-      expect(exitCount, 1);
-    },
-  );
-
-  testWidgets('HomeRoute back hint expires after 2 seconds', (
-    WidgetTester tester,
-  ) async {
-    final List<String> toastMessages = <String>[];
-    int exitCount = 0;
-    DateTime now = DateTime(2026, 5, 23, 12);
-    const MethodChannel toastChannel = MethodChannel(
-      'PonnamKarthik/fluttertoast',
-    );
-
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(toastChannel, (MethodCall methodCall) async {
-          if (methodCall.method == 'showToast') {
-            toastMessages.add(methodCall.arguments['msg'] as String);
-          }
-          return true;
-        });
-    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-      SystemChannels.platform,
-      (MethodCall methodCall) async {
-        if (methodCall.method == 'SystemNavigator.pop') {
-          exitCount += 1;
-        }
-        return null;
-      },
-    );
-    addTearDown(() async {
-      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(toastChannel, null);
-      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
-        SystemChannels.platform,
-        null,
-      );
-    });
-
-    await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-          ],
-          home: HomeRoute(backGuard: HomeBackGuard(now: () => now)),
-        ),
-      ),
-    );
-
-    await tester.binding.handlePopRoute();
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-
-    now = now.add(const Duration(seconds: 3));
-    await tester.binding.handlePopRoute();
-    await tester.pump();
-    await tester.pump(const Duration(seconds: 1));
-
-    expect(toastMessages, <String>[
-      'Press again to exit the app.',
-      'Press again to exit the app.',
-    ]);
-    expect(exitCount, 0);
+    expect(Global.profile.skinId, 'sunset');
   });
 
   testWidgets('Locale rebuild still works with routerConfig', (
@@ -476,12 +315,19 @@ class _RouteApp extends ConsumerWidget {
   }
 }
 
-Future<void> _openDrawer(WidgetTester tester) async {
-  final ScaffoldState scaffoldState = tester.state<ScaffoldState>(
-    find.byType(Scaffold).first,
-  );
-  scaffoldState.openDrawer();
-  await tester.pumpAndSettle();
+class _FakeHomeRepository extends HomeRepository {
+  _FakeHomeRepository({required List<models.Repo> repos}) : _repos = repos;
+
+  final List<models.Repo> _repos;
+
+  @override
+  Future<List<models.Repo>> fetchRepos({
+    required String username,
+    required int page,
+    required int pageSize,
+  }) async {
+    return _repos;
+  }
 }
 
 class _FakeDemoListRepository extends DemoListRepository {

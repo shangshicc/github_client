@@ -18,7 +18,10 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues(<String, Object>{});
     await Global.init();
-    Global.profile = models.Profile()..theme = Global.themes.first.toARGB32();
+    Global.profile =
+        models.Profile()
+          ..theme = Global.themes.first.toARGB32()
+          ..skinId = AppTheme.defaultSkin.id;
   });
 
   test('updateUser 在 user 与 cache 为空时不应因克隆 Profile 崩溃', () async {
@@ -48,7 +51,9 @@ void main() {
 
     final models.Profile profile = container.read(profileProvider);
     expect(profile.theme, Colors.red.toARGB32());
+    expect(profile.skinId, 'sunset');
     expect(Global.profile.theme, Colors.red.toARGB32());
+    expect(Global.profile.skinId, 'sunset');
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String? profileJson = prefs.getString('profile');
@@ -57,15 +62,20 @@ void main() {
     final Map<String, dynamic> decoded =
         jsonDecode(profileJson!) as Map<String, dynamic>;
     expect(decoded['theme'], Colors.red.toARGB32());
+    expect(decoded['skinId'], 'sunset');
   });
 
-  test('themeProvider 会通过 AppTheme 从 ARGB 值解析主题', () {
-    Global.profile = models.Profile()..theme = Colors.red.toARGB32();
+  test('themeProvider 会通过 skin/ARGB 兼容解析主题', () {
+    Global.profile =
+        models.Profile()
+          ..theme = Colors.red.toARGB32()
+          ..skinId = 'sunset';
 
     final ProviderContainer container = ProviderContainer();
     addTearDown(container.dispose);
 
     expect(container.read(themeProvider), Colors.red);
+    expect(container.read(skinProvider).id, 'sunset');
   });
 
   test('themeProvider 遇到未知 ARGB 时会回退到默认主题', () {
@@ -79,6 +89,7 @@ void main() {
       AppTheme.resolveMaterialColor(123456789),
     );
     expect(container.read(themeProvider), Colors.blue);
+    expect(container.read(skinProvider).id, AppTheme.defaultSkin.id);
   });
 
   test('updateLocale 会同步更新状态、localeProvider 与本地持久化', () async {
@@ -157,15 +168,17 @@ void main() {
     addTearDown(container.dispose);
 
     final Profile notifier = container.read(profileProvider.notifier);
-    final int previousTheme = container.read(profileProvider).theme.toInt();
+    final models.Profile previous = container.read(profileProvider);
 
     await expectLater(
       notifier.updateTheme(Colors.red),
       throwsA(isA<PlatformException>()),
     );
 
-    expect(container.read(profileProvider).theme, previousTheme);
-    expect(Global.profile.theme, previousTheme);
+    expect(container.read(profileProvider).theme, previous.theme);
+    expect(container.read(profileProvider).skinId, previous.skinId);
+    expect(Global.profile.theme, previous.theme);
+    expect(Global.profile.skinId, previous.skinId);
   });
 
   test('updateLocale 持久化失败时会回滚内存状态与 Global.profile', () async {
@@ -196,10 +209,12 @@ void main() {
     expect(container.read(localeProvider), const Locale('zh'));
   });
 
-  test('主题与语言持久化后重新初始化仍可恢复', () async {
+  test('主题与语言持久化后重新初始化仍可恢复，主题模式固定跟随系统', () async {
     Global.profile =
         models.Profile()
           ..theme = Global.themes.first.toARGB32()
+          ..skinId = AppTheme.defaultSkin.id
+          ..themeMode = 'dark'
           ..locale = 'zh'
           ..cache =
               (models.CacheConfig()
@@ -225,11 +240,14 @@ void main() {
     await Global.init();
 
     expect(Global.profile.theme, Colors.red.toARGB32());
+    expect(Global.profile.skinId, 'sunset');
+    expect(Global.profile.themeMode, 'dark');
     expect(Global.profile.locale, 'en');
 
     final ProviderContainer restoredContainer = ProviderContainer();
     addTearDown(restoredContainer.dispose);
     expect(restoredContainer.read(themeProvider), Colors.red);
+    expect(restoredContainer.read(skinProvider).id, 'sunset');
     expect(restoredContainer.read(localeProvider), const Locale('en'));
   });
 }

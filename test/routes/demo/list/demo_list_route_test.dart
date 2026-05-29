@@ -1,9 +1,9 @@
-import 'dart:async';
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:github_client_app/common/app_theme.dart';
 import 'package:github_client_app/l10n/app_localizations.dart';
 import 'package:github_client_app/models/repo.dart';
 import 'package:github_client_app/models/user.dart';
@@ -43,6 +43,69 @@ void main() {
     await _disposeRoute(tester);
   });
 
+  testWidgets('DemoListRoute 深色主题下使用语义颜色而非写死浅色背景', (WidgetTester tester) async {
+    final _FakeDemoListRepository repository = _FakeDemoListRepository(
+      responses: <_FakeResponseFactory>[
+        () =>
+            Future<List<Repo>>.value(<Repo>[_buildRepo(id: 3, name: 'repo-3')]),
+      ],
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          demoListRepositoryProvider.overrideWithValue(repository),
+          themeProvider.overrideWithValue(Colors.blue),
+        ],
+        child: const _TestApp(
+          themeMode: ThemeMode.dark,
+          child: DemoListRoute(),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump();
+
+    final ThemeData theme = Theme.of(
+      tester.element(find.byType(DemoListRoute)),
+    );
+    final Container titleContainer = tester.widget<Container>(
+      find
+          .byWidgetPredicate(
+            (Widget widget) =>
+                widget is Container &&
+                widget.decoration is BoxDecoration &&
+                (widget.decoration as BoxDecoration).borderRadius ==
+                    const BorderRadius.vertical(top: Radius.circular(12)),
+          )
+          .first,
+    );
+    final BoxDecoration titleDecoration =
+        titleContainer.decoration! as BoxDecoration;
+    expect(titleDecoration.color, theme.colorScheme.primaryContainer);
+
+    final Container metaContainer = tester.widget<Container>(
+      find
+          .byWidgetPredicate(
+            (Widget widget) =>
+                widget is Container &&
+                widget.decoration is BoxDecoration &&
+                (widget.decoration as BoxDecoration).borderRadius ==
+                    const BorderRadius.vertical(bottom: Radius.circular(12)),
+          )
+          .first,
+    );
+    final BoxDecoration metaDecoration =
+        metaContainer.decoration! as BoxDecoration;
+    expect(metaDecoration.color, theme.colorScheme.surfaceContainerLow);
+
+    final Text descriptionText = tester.widget<Text>(find.text('desc-repo-3'));
+    expect(descriptionText.style?.color, theme.colorScheme.onSurfaceVariant);
+
+    await _disposeRoute(tester);
+  });
+
   testWidgets('DemoListRoute 错误页点击重试后可恢复列表展示', (WidgetTester tester) async {
     final _FakeDemoListRepository repository = _FakeDemoListRepository(
       responses: <_FakeResponseFactory>[
@@ -78,16 +141,66 @@ void main() {
 
     await _disposeRoute(tester);
   });
+
+  testWidgets('DemoListRoute 横屏宽屏下会收敛主内容宽度并保持列表可见', (
+    WidgetTester tester,
+  ) async {
+    final _FakeDemoListRepository repository = _FakeDemoListRepository(
+      responses: <_FakeResponseFactory>[
+        () => Future<List<Repo>>.value(<Repo>[
+          _buildRepo(id: 1, name: 'repo-1'),
+          _buildRepo(id: 2, name: 'repo-2'),
+        ]),
+      ],
+    );
+
+    await tester.binding.setSurfaceSize(const Size(932, 430));
+    addTearDown(() async {
+      await tester.binding.setSurfaceSize(null);
+    });
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          demoListRepositoryProvider.overrideWithValue(repository),
+          themeProvider.overrideWithValue(Colors.blue),
+        ],
+        child: const _TestApp(child: DemoListRoute()),
+      ),
+    );
+
+    await tester.pump();
+    await tester.pump();
+
+    expect(find.text('repo-1'), findsOneWidget);
+    expect(find.text('desc-repo-1'), findsOneWidget);
+
+    final ConstrainedBox constraintBox = tester.widget<ConstrainedBox>(
+      find.byKey(const ValueKey<String>('demo_list_item_constraint_0')),
+    );
+    final Size constrainedSize = tester.getSize(
+      find.byKey(const ValueKey<String>('demo_list_item_constraint_0')),
+    );
+
+    expect(constraintBox.constraints.maxWidth, 760);
+    expect(constrainedSize.width, lessThan(932));
+
+    await _disposeRoute(tester);
+  });
 }
 
 class _TestApp extends StatelessWidget {
-  const _TestApp({required this.child});
+  const _TestApp({required this.child, this.themeMode = ThemeMode.light});
 
   final Widget child;
+  final ThemeMode themeMode;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: AppTheme.buildLightThemeData(Colors.blue.toARGB32()),
+      darkTheme: AppTheme.buildDarkThemeData(Colors.blue.toARGB32()),
+      themeMode: themeMode,
       localizationsDelegates: const [AppLocalizations.delegate],
       supportedLocales: AppLocalizations.supportedLocales,
       home: child,

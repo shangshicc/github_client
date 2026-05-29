@@ -19,6 +19,10 @@ class Global {
 
   // 可选的主题列表
   static List<MaterialColor> get themes => AppTheme.palettes;
+
+  /// 可选的皮肤列表。
+  static List<AppSkin> get skins => AppTheme.skins;
+
   // 是否为release版
   static bool get isRelease => const bool.fromEnvironment("dart.vm.product");
 
@@ -31,19 +35,22 @@ class Global {
         final decoded = jsonDecode(profileJson) as Map<String, dynamic>;
         if (decoded['user'] != null) {
           profile = Profile.fromJson(decoded);
+          _normalizeProfileTheme();
           _log.i(
             'Global.init loaded stored profile, hasUser=${profile.user != null}, '
-            'theme=${profile.theme}, locale=${profile.locale ?? "system"}',
+            'skinId=${profile.skinId ?? "null"}, theme=${profile.theme}, '
+            'locale=${profile.locale ?? "system"}',
           );
         } else {
-          profile = Profile()..theme = 0;
+          profile = _createDefaultProfile();
           _log.w(
             'Global.init found stored profile without user, reset to default profile, '
-            'theme=${profile.theme}, locale=${profile.locale ?? "system"}',
+            'skinId=${profile.skinId ?? "null"}, theme=${profile.theme}, '
+            'locale=${profile.locale ?? "system"}',
           );
         }
       } catch (error, stackTrace) {
-        profile = Profile()..theme = 0;
+        profile = _createDefaultProfile();
         _log.e(
           'Global.init failed to read stored profile, fell back to default profile',
           error: error,
@@ -51,11 +58,11 @@ class Global {
         );
       }
     } else {
-      // 默认主题索引为0， 代表蓝色
-      profile = Profile()..theme = 0;
+      profile = _createDefaultProfile();
       _log.i(
         'Global.init did not find stored profile, initialized default profile, '
-        'theme=${profile.theme}, locale=${profile.locale ?? "system"}',
+        'skinId=${profile.skinId ?? "null"}, theme=${profile.theme}, '
+        'locale=${profile.locale ?? "system"}',
       );
     }
 
@@ -69,20 +76,19 @@ class Global {
     Git.init();
     _log.i(
       'Global.init finished, hasUser=${profile.user != null}, '
-      'theme=${profile.theme}, locale=${profile.locale ?? "system"}',
+      'skinId=${profile.skinId ?? "null"}, theme=${profile.theme}, '
+      'locale=${profile.locale ?? "system"}',
     );
   }
 
   /// 将当前 Profile 持久化到本地存储。
-  ///
-  /// 该方法会把内存中的 [profile] 编码后写入 `SharedPreferences`，
-  /// 用于保存主题、语言、登录信息等全局配置。
   static Future<void> saveProfile() async {
     try {
       await _prefs.setString("profile", jsonEncode(profile.toJson()));
       _log.i(
-        'Global.saveProfile persisted profile, theme=${profile.theme}, '
-        'hasUser=${profile.user != null}, locale=${profile.locale ?? "system"}',
+        'Global.saveProfile persisted profile, skinId=${profile.skinId ?? "null"}, '
+        'theme=${profile.theme}, hasUser=${profile.user != null}, '
+        'locale=${profile.locale ?? "system"}',
       );
     } catch (error, stackTrace) {
       _log.e(
@@ -92,5 +98,20 @@ class Global {
       );
       rethrow;
     }
+  }
+
+  static Profile _createDefaultProfile() {
+    return Profile()
+      ..theme = AppTheme.defaultSkin.swatch.toARGB32()
+      ..skinId = AppTheme.defaultSkin.id;
+  }
+
+  static void _normalizeProfileTheme() {
+    final AppSkin resolvedSkin = AppTheme.resolveSkin(
+      profile.skinId,
+      legacyArgb: profile.theme,
+    );
+    profile.skinId = resolvedSkin.id;
+    profile.theme = resolvedSkin.swatch.toARGB32();
   }
 }
